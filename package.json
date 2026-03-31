@@ -1,10 +1,6 @@
 {
   "name": "str-cleaning",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -18,8 +14,11 @@
     "@babel/generator": "^7.29.1",
     "turbo": "^2.4.0"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@parcel/watcher", "core-js", "esbuild", "sharp"]
+  },
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "npm@10.9.0"
+  "packageManager": "pnpm@10.33.0"
 }
