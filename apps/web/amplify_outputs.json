@@ -1,0 +1,62 @@
+{
+  "auth": {
+    "user_pool_id": "us-east-1_BebZ21OOF",
+    "aws_region": "us-east-1",
+    "user_pool_client_id": "43r9eafhfb6vv4ld6p6s8bi3uq",
+    "identity_pool_id": "us-east-1:9ad32eeb-76da-449c-9186-c7003f11f67e",
+    "mfa_methods": [],
+    "standard_required_attributes": [
+      "email",
+      "given_name",
+      "family_name"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "groups": [],
+    "mfa_configuration": "NONE",
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": true,
+      "require_uppercase": true
+    },
+    "unauthenticated_identities_enabled": true
+  },
+  "storage": {
+    "aws_region": "us-east-1",
+    "bucket_name": "amplify-strcleaningweb-ri-strcleaningstoragebucket-qgqvcyoytiz2",
+    "buckets": [
+      {
+        "name": "str-cleaning-storage",
+        "bucket_name": "amplify-strcleaningweb-ri-strcleaningstoragebucket-qgqvcyoytiz2",
+        "aws_region": "us-east-1",
+        "paths": {
+          "properties/${cognito-identity.amazonaws.com:sub}/*": {
+            "entityidentity": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "portfolio/*": {
+            "guest": [
+              "get",
+              "list"
+            ],
+            "authenticated": [
+              "get",
+              "list"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "version": "1.4"
+}
