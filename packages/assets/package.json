@@ -1,0 +1,14 @@
+{
+  "name": "@str-cleaning/assets",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "exports": {
+    ".": {
+      "react-native": "./index.native.ts",
+      "default": "./index.ts"
+    },
+    "./images/*": "./images/*",
+    "./contactSchema": "./contactSchema.ts"
+  }
+}

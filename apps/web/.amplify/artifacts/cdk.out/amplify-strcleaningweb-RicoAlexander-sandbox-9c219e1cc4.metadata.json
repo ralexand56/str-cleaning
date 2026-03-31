@@ -1,0 +1,383 @@
+{
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4": [
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "amplify:deployment-type",
+          "value": "sandbox"
+        },
+        {
+          "key": "created-by",
+          "value": "amplify"
+        }
+      ]
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/deploymentType": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "deploymentType"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/region": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "region"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/userPoolId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "userPoolId"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/webClientId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "webClientId"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/identityPoolId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "identityPoolId"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/authRegion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "authRegion"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/allowUnauthenticatedIdentities": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "allowUnauthenticatedIdentities"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/signupAttributes": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "signupAttributes"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/usernameAttributes": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "usernameAttributes"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/verificationMechanisms": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "verificationMechanisms"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/passwordPolicyMinLength": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "passwordPolicyMinLength"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/passwordPolicyRequirements": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "passwordPolicyRequirements"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/mfaConfiguration": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "mfaConfiguration"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/mfaTypes": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "mfaTypes"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/passwordlessOptions": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "passwordlessOptions"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/socialProviders": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "socialProviders"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/oauthCognitoDomain": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "oauthCognitoDomain"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/oauthScope": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "oauthScope"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/oauthRedirectSignIn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "oauthRedirectSignIn"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/oauthRedirectSignOut": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "oauthRedirectSignOut"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/oauthResponseType": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "oauthResponseType"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/oauthClientId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "oauthClientId"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/groups": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "groups"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storageRegion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "storageRegion"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/bucketName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "bucketName"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/buckets": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "buckets"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthUserPoolC1F70AEARef": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthUserPoolC1F70AEARef"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthUserPoolAppClient1F8B1C3ERef": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthUserPoolAppClient1F8B1C3ERef"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthIdentityPool8642D1F1Ref": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthIdentityPool8642D1F1Ref"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthauthenticatedUserRole6DDD6EAFRef": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthauthenticatedUserRole6DDD6EAFRef"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthunauthenticatedUserRoleD17ADB3FRef": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthunauthenticatedUserRoleD17ADB3FRef"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth.NestedStack/auth.NestedStackResource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "auth179371D7"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+    {
+      "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+      "data": true
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/reference-to-amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authNestedStackauthNestedStackResource8DD9ABECOutputs.amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthauthenticatedUserRole6DDD6EAFRef": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "referencetoamplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authNestedStackauthNestedStackResource8DD9ABECOutputsamplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthauthenticatedUserRole6DDD6EAFRef"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/reference-to-amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authNestedStackauthNestedStackResource8DD9ABECOutputs.amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthunauthenticatedUserRoleD17ADB3FRef": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "referencetoamplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authNestedStackauthNestedStackResource8DD9ABECOutputsamplifystrcleaningwebRicoAlexandersandbox9c219e1cc4authamplifyAuthunauthenticatedUserRoleD17ADB3FRef"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4storagestrcleaningstorageBucketBF951476Ref": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4storagestrcleaningstorageBucketBF951476Ref"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage.NestedStack/storage.NestedStackResource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "storage0EC3F24A"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/CDKMetadata/Condition": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadataAvailable"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifyAuth/IdentityPool": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifyAuthIdentityPool3FDE84CC"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifyAuth/IdentityPoolRoleAttachment": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifyAuthIdentityPoolRoleAttachment045F17C8"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/CDKMetadata/Condition": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadataAvailable"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/STR_CLEANING_STORAGE_BUCKET_NAMEParameter/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "STRCLEANINGSTORAGEBUCKETNAMEParameterC5D590D0"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4--storageAccess3/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4storageAccess3693F1F85"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4--storageAccess4/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4storageAccess4F307F903"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/CDKMetadata/Condition": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadataAvailable"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifyAuth/UserPool/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifyAuthUserPool4BA7F805"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifyAuth/UserPoolAppClient/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifyAuthUserPoolAppClient2626C6F8"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifyAuth/authenticatedUserRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifyAuthauthenticatedUserRoleD8DA3689"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/auth/amplifyAuth/unauthenticatedUserRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "amplifyAuthunauthenticatedUserRole2B524D9E"
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/str-cleaning-storage/Bucket/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "strcleaningstorageBucket49C86524"
+    },
+    {
+      "type": "aws:cdk:analytics:mixin",
+      "data": {
+        "mixin": "aws-cdk-lib.aws_s3.mixins.BucketAutoDeleteObjects"
+      }
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/str-cleaning-storage/Bucket/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "strcleaningstorageBucketPolicyF621DBF1"
+    },
+    {
+      "type": "aws:cdk:analytics:mixin",
+      "data": {
+        "mixin": "aws-cdk-lib.aws_s3.mixins.BucketPolicyStatements"
+      }
+    }
+  ],
+  "/amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/str-cleaning-storage/Bucket/AutoDeleteObjectsCustomResource/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "strcleaningstorageBucketAutoDeleteObjectsCustomResourceF1A2AFEE"
+    }
+  ]
+}

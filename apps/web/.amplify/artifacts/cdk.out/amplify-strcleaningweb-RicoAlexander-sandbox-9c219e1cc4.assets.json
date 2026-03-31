@@ -1,0 +1,62 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6": {
+      "displayName": "amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4/storage/Custom::S3AutoDeleteObjectsCustomResourceProvider Code",
+      "source": {
+        "path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-current_region-e31788a2": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    },
+    "51eceb75abb5dad377bf1bee978619ce37fed77222f984ddda8930c9958c21e1": {
+      "displayName": "auth Nested Stack Template",
+      "source": {
+        "path": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4auth60CF545C.nested.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region-94de8f6d": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "51eceb75abb5dad377bf1bee978619ce37fed77222f984ddda8930c9958c21e1.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    },
+    "895db7c1e60e4f610c2fb13b1e3b5956f7efdee4c57f153c855ed13e30f2dd23": {
+      "displayName": "storage Nested Stack Template",
+      "source": {
+        "path": "amplifystrcleaningwebRicoAlexandersandbox9c219e1cc4storageABC64FD9.nested.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region-791ed809": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "895db7c1e60e4f610c2fb13b1e3b5956f7efdee4c57f153c855ed13e30f2dd23.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    },
+    "0076199786e9f7f56850c5b509e4ada0e5efa71eb6c6e716731feb07347dcbb0": {
+      "displayName": "amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4 Template",
+      "source": {
+        "path": "amplify-strcleaningweb-RicoAlexander-sandbox-9c219e1cc4.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region-d5ef2ec7": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "0076199786e9f7f56850c5b509e4ada0e5efa71eb6c6e716731feb07347dcbb0.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

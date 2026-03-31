@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "ST Cleaning Crew",
+    "slug": "str-cleaning",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "str-cleaning",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.strcleaning.app"
+    },
+    "android": {
+      "package": "com.strcleaning.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

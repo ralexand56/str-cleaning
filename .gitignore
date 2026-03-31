@@ -137,3 +137,16 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Turbo
+.turbo
+
+# Expo
+apps/mobile/.expo
+apps/mobile/android
+apps/mobile/ios
+
+# Amplify
+amplify_outputs.json
+apps/web/amplify_outputs.json
+apps/mobile/amplify_outputs.json
