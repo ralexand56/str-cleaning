@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "main": "./index.ts",
+  "dependencies": {
+    "zod": "^3.25.0"
+  },
   "exports": {
     ".": {
       "react-native": "./index.native.ts",
