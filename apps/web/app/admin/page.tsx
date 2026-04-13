@@ -1,7 +1,10 @@
+import Link from 'next/link'
 import { getContacts } from '@/app/actions/getContacts'
+import { getBookings } from '@/app/actions/getBookings'
 import { ContactsTab } from './ContactsTab'
+import { BookingsTab } from './BookingsTab'
 
-const TABS = ['Contacts'] as const
+const TABS = ['Contacts', 'Bookings'] as const
 type Tab = typeof TABS[number]
 
 export default async function AdminPage({
@@ -13,14 +16,23 @@ export default async function AdminPage({
   const activeTab: Tab = (TABS as readonly string[]).includes(tab ?? '') ? (tab as Tab) : 'Contacts'
 
   const contacts = activeTab === 'Contacts' ? await getContacts() : []
+  const bookings = activeTab === 'Bookings' ? await getBookings() : []
 
   return (
     <div className="min-h-screen bg-stone text-dark-brown">
       <div className="max-w-[1200px] mx-auto px-8 py-12">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="font-marcellus text-4xl text-dark-brown">Admin</h1>
-          <p className="font-marcellus text-dark-brown opacity-50 text-sm mt-2">STR Cleaning Crew</p>
+        <div className="flex items-start justify-between mb-10">
+          <div>
+            <h1 className="font-marcellus text-4xl text-dark-brown">Admin</h1>
+            <p className="font-marcellus text-dark-brown opacity-50 text-sm mt-2">STR Cleaning Crew</p>
+          </div>
+          <Link
+            href="/"
+            className="font-marcellus text-sm text-dark-brown opacity-40 hover:opacity-70 transition-opacity no-underline mt-1"
+          >
+            ← Home
+          </Link>
         </div>
 
         {/* Tabs */}
@@ -43,6 +55,7 @@ export default async function AdminPage({
 
         {/* Tab content */}
         {activeTab === 'Contacts' && <ContactsTab contacts={contacts} />}
+        {activeTab === 'Bookings' && <BookingsTab bookings={bookings} />}
       </div>
     </div>
   )
