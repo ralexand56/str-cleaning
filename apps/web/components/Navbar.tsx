@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { label: 'About',       href: '/about' },
 ]
 
-const LIGHT_BG_PAGES = ['/about', '/contact']
+const LIGHT_BG_PAGES = ['/about', '/contact', '/book']
 
 export function Navbar() {
   const pathname = usePathname()
@@ -80,7 +80,7 @@ export function Navbar() {
           </button>
         ) : (
           <Link
-            href="/sign-in"
+            href="/book"
             className="max-[980px]:ml-0 ml-2 px-[30px] py-3.5 rounded-full bg-accent text-dark-brown opacity-100 no-underline"
           >
             Book Now!
