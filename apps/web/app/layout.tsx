@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { AmplifyProvider } from '@/components/AmplifyProvider'
+import Footer from '@/components/Footer'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AmplifyProvider>{children}</AmplifyProvider>
+        <AmplifyProvider>
+          {children}
+          <Footer />
+        </AmplifyProvider>
       </body>
     </html>
   )
