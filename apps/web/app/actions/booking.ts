@@ -12,10 +12,9 @@ const TABLE_NAME   = process.env.BOOKING_TABLE_NAME ?? 'BookingRequests'
 const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL       ?? 'info@str-cleaningcrew.com'
 
 export type BookingFormData = {
-  serviceType: string
-  bedrooms:    number
-  bathrooms:   number
-  extras:      string[]
+  serviceType:  string
+  propertySize: string
+  extras:       string[]
   date:        string
   timeWindow:  string
   frequency:   string
@@ -41,8 +40,7 @@ export async function submitBooking(form: BookingFormData) {
     Item: {
       id:             { S: id },
       serviceType:    { S: form.serviceType },
-      bedrooms:       { N: String(form.bedrooms) },
-      bathrooms:      { N: String(form.bathrooms) },
+      propertySize:   { S: form.propertySize },
       extras:         { S: form.extras.join(', ') || 'None' },
       date:           { S: form.date },
       timeWindow:     { S: form.timeWindow },
@@ -71,7 +69,7 @@ export async function submitBooking(form: BookingFormData) {
             `Phone:     ${form.phone}`,
             ``,
             `Service:   ${form.serviceType}`,
-            `Property:  ${form.bedrooms} bed / ${form.bathrooms} bath`,
+            `Property:  ${form.propertySize}`,
             `Extras:    ${form.extras.join(', ') || 'None'}`,
             ``,
             `Date:      ${form.date}`,

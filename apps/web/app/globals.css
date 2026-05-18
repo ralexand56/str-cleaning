@@ -16,6 +16,7 @@
   --animate-rise-delay-2:  rise 900ms ease-out 240ms both;
   --animate-rise-delay-3:  rise 900ms ease-out 360ms both;
   --animate-hero-zoom:     hero-zoom 18s ease-in-out infinite alternate;
+  --animate-marquee:       marquee 28s linear infinite;
 }
 
 /* ── Keyframes ── */
@@ -27,6 +28,11 @@
 @keyframes hero-zoom {
   from { transform: scale(1.02); }
   to   { transform: scale(1.08); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 /* ── Utilities ── */

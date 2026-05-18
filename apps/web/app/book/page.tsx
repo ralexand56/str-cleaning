@@ -14,7 +14,7 @@ export default function BookPage() {
       </div>
 
       <main className="flex-1 px-5 py-16 max-sm:py-10">
-        <div className="max-w-[620px] mx-auto">
+        <div className="max-w-[1080px] mx-auto">
           <h1 className="font-marcellus text-[clamp(2.4rem,5vw,4.2rem)] leading-[1.05] mb-3 animate-rise">
             Get a Quote
           </h1>

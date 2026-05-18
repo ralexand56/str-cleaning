@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { label: 'About',       href: '/about' },
 ]
 
-const LIGHT_BG_PAGES = ['/about', '/contact', '/book']
+const LIGHT_BG_PAGES = ['/about', '/contact', '/book', '/residential', '/services', '/business', '/portfolio']
 
 export function Navbar() {
   const pathname = usePathname()
@@ -24,7 +24,7 @@ export function Navbar() {
   const lightBg = LIGHT_BG_PAGES.some((p) => pathname.startsWith(p))
 
   return (
-    <header className="flex justify-between items-center gap-6 px-12 py-7 max-[980px]:flex-col max-[980px]:items-start max-[980px]:px-6 max-[980px]:py-[22px]">
+    <header className={`flex justify-between items-center gap-6 px-12 py-7 max-[980px]:flex-col max-[980px]:items-start max-[980px]:px-6 max-[980px]:py-[22px] ${lightBg ? 'text-dark-brown' : 'text-stone'}`}>
       <Link
         href="/"
         className="inline-flex w-[72px] max-sm:w-[58px]"
