@@ -8,7 +8,8 @@
       "Bash(npx tsc *)",
       "Bash(curl -s http://localhost:3000/services)",
       "Bash(./node_modules/.bin/tsc --noEmit --project apps/web/tsconfig.json)",
-      "Bash(apps/web/node_modules/.bin/tsc --noEmit --project apps/web/tsconfig.json)"
+      "Bash(apps/web/node_modules/.bin/tsc --noEmit --project apps/web/tsconfig.json)",
+      "Bash(gh auth *)"
     ]
   }
 }
