@@ -4,7 +4,7 @@ import { Navbar } from '@/components/Navbar'
 
 export const metadata = {
   title: 'Portfolio — STR Cleaning Crew',
-  description: 'A look into our residential and commercial cleaning work.',
+  description: 'A look into our short-term rental cleaning work.',
 }
 
 const PROJECTS = [
@@ -40,7 +40,7 @@ export default function PortfolioPage() {
             A look into our work
           </h1>
           <p className="font-marcellus text-sm text-dark-brown opacity-70 leading-relaxed max-w-[400px]">
-            Take a look at the quality, detail, and consistency that define STR Cleaning Crew. Our portfolio highlights real results from residential and commercial projects, showcasing our commitment to precision, professionalism, and exceptional standards in every space we service.
+            Take a look at the quality, detail, and consistency that define STR Cleaning Crew. Our portfolio highlights real results from short-term rental properties, showcasing our commitment to precision, professionalism, and exceptional standards in every space we service.
           </p>
         </div>
         <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden">

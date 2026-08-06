@@ -68,12 +68,8 @@ export function ServicesContactForm() {
         </p>
         <div className="flex gap-6">
           <label className="flex items-center gap-2 font-marcellus text-sm text-dark-brown opacity-70 cursor-pointer">
-            <input type="checkbox" name="service" value="residential" className="accent-dark-brown" />
-            Residential
-          </label>
-          <label className="flex items-center gap-2 font-marcellus text-sm text-dark-brown opacity-70 cursor-pointer">
-            <input type="checkbox" name="service" value="business" className="accent-dark-brown" />
-            Business
+            <input type="checkbox" name="service" value="str-cleaning" className="accent-dark-brown" />
+            STR Cleaning
           </label>
         </div>
       </div>

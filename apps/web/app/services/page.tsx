@@ -6,7 +6,7 @@ import { ServicesContactForm } from '@/components/ServicesContactForm'
 
 export const metadata = {
   title: 'Services — STR Cleaning Crew',
-  description: 'Tailored cleaning packages for residential and business properties.',
+  description: 'Tailored cleaning packages for short-term rental properties.',
 }
 
 const VALUES = [
@@ -48,7 +48,7 @@ export default function ServicesPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end">
           <div className="flex flex-col gap-6">
             <p className="font-marcellus text-sm text-dark-brown opacity-70 leading-relaxed max-w-[420px]">
-              We offer two tailored service packages to meet different needs: our Residential Cleaning services are designed to care for homes with specialised options such as regular, deep, move-in, and move-out cleaning; our Business Cleaning services are built to maintain short-term rental properties.
+              We specialize exclusively in short-term rental property care — from routine turnovers to deep cleans, seasonal maintenance, and emergency response. Every package is built around the unique demands of STR hosting.
             </p>
             <div className="w-40 h-px bg-dark-brown/30" />
           </div>
@@ -70,44 +70,23 @@ export default function ServicesPage() {
       <section className="max-w-[1300px] mx-auto w-full px-10 pb-16 max-lg:px-6">
         <h2 className="font-marcellus text-[clamp(1.6rem,3vw,2.4rem)] mb-8">Our Packages</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Residential */}
-          <div className="border border-dark-brown/15 rounded-xl overflow-hidden flex flex-col">
-            <div className="relative aspect-[4/3]">
-              <Image
-                src="/images/unsplash-image-P4ep6vg92DA.webp"
-                alt="Residential cleaning"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="p-6 flex flex-col gap-4 flex-1">
-              <h3 className="font-marcellus text-lg">Residential Cleaning</h3>
-              <Link
-                href="/residential"
-                className="self-start px-6 py-2.5 rounded-full border border-dark-brown/40 font-marcellus text-sm no-underline text-dark-brown hover:bg-dark-brown hover:text-stone transition-colors"
-              >
-                Learn more
-              </Link>
-            </div>
-          </div>
-
-          {/* Business */}
+          {/* STR / Business */}
           <div className="border border-dark-brown/15 rounded-xl overflow-hidden flex flex-col">
             <div className="relative aspect-[4/3]">
               <Image
                 src="/images/unsplash-image-5TXz228u4eo.webp"
-                alt="Business cleaning"
+                alt="STR cleaning"
                 fill
                 className="object-cover"
               />
             </div>
             <div className="p-6 flex flex-col gap-4 flex-1">
-              <h3 className="font-marcellus text-lg">Business Cleaning</h3>
+              <h3 className="font-marcellus text-lg">STR Cleaning Packages</h3>
               <Link
                 href="/business"
                 className="self-start px-6 py-2.5 rounded-full border border-dark-brown/40 font-marcellus text-sm no-underline text-dark-brown hover:bg-dark-brown hover:text-stone transition-colors"
               >
-                Learn more
+                View packages
               </Link>
             </div>
           </div>

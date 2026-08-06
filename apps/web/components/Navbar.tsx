@@ -7,16 +7,14 @@ import { motion } from 'framer-motion'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 
 const NAV_LINKS = [
-  { label: 'Home',        href: '/' },
-  { label: 'Services',    href: '/services' },
-  { label: 'Business',    href: '/business' },
-  { label: 'Residential', href: '/residential' },
-  { label: 'Portfolio',   href: '/portfolio' },
-  { label: 'Contact',     href: '/contact' },
-  { label: 'About',       href: '/about' },
+  { label: 'Home',      href: '/' },
+  { label: 'Services',  href: '/services' },
+  { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Contact',   href: '/contact' },
+  { label: 'About',     href: '/about' },
 ]
 
-const LIGHT_BG_PAGES = ['/about', '/contact', '/book', '/residential', '/services', '/business', '/portfolio']
+const LIGHT_BG_PAGES = ['/about', '/contact', '/book', '/services', '/business', '/portfolio']
 
 export function Navbar() {
   const pathname = usePathname()
