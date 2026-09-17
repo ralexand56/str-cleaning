@@ -1,60 +1,94 @@
 'use server'
 
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { randomUUID } from 'crypto'
+import { publicDataClient } from '@/lib/data/publicClient'
+import { stripe } from '@/lib/stripe/server'
+import type { SelectedAddOn } from '@/lib/pricing/types'
 
 const region = process.env.AWS_REGION ?? 'us-east-1'
-const dynamo = new DynamoDBClient({ region })
 const ses    = new SESClient({ region })
 
-const TABLE_NAME   = process.env.BOOKING_TABLE_NAME ?? 'BookingRequests'
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL       ?? 'info@str-cleaningcrew.com'
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL ?? 'info@str-cleaningcrew.com'
+
+const SERVICE_KEY_TO_JOB_TYPE: Record<string, string> = {
+  str_turnover: 'STR_TURNOVER',
+  str_deep: 'STR_DEEP',
+  str_seasonal: 'STR_SEASONAL',
+  str_startup: 'STR_STARTUP',
+  str_subscription_standard: 'STR_SUBSCRIPTION_STANDARD',
+  str_subscription_premium: 'STR_SUBSCRIPTION_PREMIUM',
+  residential_recurring: 'RESIDENTIAL_RECURRING',
+}
 
 export type BookingFormData = {
-  serviceType:  string
+  category:     'str' | 'residential'
+  serviceKey:   string
   propertySize: string
-  extras:       string[]
-  date:        string
-  timeWindow:  string
-  frequency:   string
-  address:     string
-  unit:        string
-  city:        string
-  state:       string
-  zip:         string
-  firstName:   string
-  lastName:    string
-  email:       string
-  phone:       string
-  notes:       string
-  estimatedTotal: number
+  addOns:       SelectedAddOn[]
+  date:         string
+  timeWindow:   string
+  frequency:    string
+  emergencySameDay: boolean
+  address:      string
+  unit:         string
+  city:         string
+  state:        string
+  zip:          string
+  firstName:    string
+  lastName:     string
+  email:        string
+  phone:        string
+  notes:        string
+  estimatedLow:  number
+  estimatedHigh: number
+  stripeCustomerId?:       string
+  stripePaymentMethodId?:  string
+  customerId?:             string
 }
 
 export async function submitBooking(form: BookingFormData) {
   const now = new Date().toISOString()
-  const id  = randomUUID()
+  const fullAddress = `${form.address}${form.unit ? ` #${form.unit}` : ''}, ${form.city}, ${form.state} ${form.zip}`
+  const addOnsSummary = form.addOns.map((a) => `${a.id} x${a.qty}`).join(', ') || 'None'
 
-  await dynamo.send(new PutItemCommand({
-    TableName: TABLE_NAME,
-    Item: {
-      id:             { S: id },
-      serviceType:    { S: form.serviceType },
-      propertySize:   { S: form.propertySize },
-      extras:         { S: form.extras.join(', ') || 'None' },
-      date:           { S: form.date },
-      timeWindow:     { S: form.timeWindow },
-      frequency:      { S: form.frequency },
-      address:        { S: `${form.address}${form.unit ? ` #${form.unit}` : ''}, ${form.city}, ${form.state} ${form.zip}` },
-      firstName:      { S: form.firstName },
-      lastName:       { S: form.lastName },
-      email:          { S: form.email },
-      phone:          { S: form.phone },
-      notes:          { S: form.notes || 'None' },
-      estimatedTotal: { N: String(form.estimatedTotal) },
-      createdAt:      { S: now },
-    },
-  }))
+  const created = await publicDataClient.models.Job.create({
+    type: (SERVICE_KEY_TO_JOB_TYPE[form.serviceKey] ?? 'STR_TURNOVER') as never,
+    source: 'BOOKING_FORM',
+    status: 'NEW',
+    category: form.category === 'residential' ? 'RESIDENTIAL' : 'STR',
+    firstName: form.firstName,
+    lastName: form.lastName,
+    email: form.email,
+    phone: form.phone,
+    propertySize: form.propertySize,
+    address: form.address,
+    unit: form.unit,
+    city: form.city,
+    state: form.state,
+    zip: form.zip,
+    frequency: form.frequency,
+    addOns: form.addOns,
+    emergencySameDay: form.emergencySameDay,
+    scheduledDate: form.date || undefined,
+    scheduledTimeWindow: form.timeWindow,
+    estimatedLow: form.estimatedLow,
+    estimatedHigh: form.estimatedHigh,
+    notes: form.notes,
+    customerId: form.customerId,
+  })
+
+  if (form.stripePaymentMethodId && form.customerId) {
+    const method = await stripe.paymentMethods.retrieve(form.stripePaymentMethodId)
+    await publicDataClient.models.PaymentMethod.create({
+      customerId: form.customerId,
+      stripePaymentMethodId: form.stripePaymentMethodId,
+      brand: method.card?.brand,
+      last4: method.card?.last4,
+      expMonth: method.card?.exp_month,
+      expYear: method.card?.exp_year,
+      isDefault: true,
+    })
+  }
 
   await ses.send(new SendEmailCommand({
     Source:      NOTIFY_EMAIL,
@@ -68,22 +102,24 @@ export async function submitBooking(form: BookingFormData) {
             `Email:     ${form.email}`,
             `Phone:     ${form.phone}`,
             ``,
-            `Service:   ${form.serviceType}`,
+            `Category:  ${form.category}`,
+            `Service:   ${form.serviceKey}`,
             `Property:  ${form.propertySize}`,
-            `Extras:    ${form.extras.join(', ') || 'None'}`,
+            `Add-ons:   ${addOnsSummary}`,
             ``,
             `Date:      ${form.date}`,
             `Arrival:   ${form.timeWindow}`,
             `Frequency: ${form.frequency}`,
+            `Emergency: ${form.emergencySameDay ? 'Yes' : 'No'}`,
             ``,
-            `Address:   ${form.address}${form.unit ? ` #${form.unit}` : ''}, ${form.city}, ${form.state} ${form.zip}`,
+            `Address:   ${fullAddress}`,
             ``,
-            `Estimated: $${form.estimatedTotal}`,
+            `Estimated: $${form.estimatedLow} – $${form.estimatedHigh}`,
             ``,
             `Notes:     ${form.notes || 'None'}`,
             ``,
             `Submitted: ${now}`,
-            `ID:        ${id}`,
+            `Job ID:    ${created.data?.id ?? 'unknown'}`,
           ].join('\n'),
         },
       },

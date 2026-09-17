@@ -1,0 +1,229 @@
+{
+  "calculator_config": {
+    "version": "2.0",
+    "source": "STR_Complete_Pricing_Guide_REVISED (Google Drive), May 12 2026",
+    "note": "Prices reflect two consecutive 5% reductions from the original list. This REVISED sheet supersedes the April 'Calculator Data For Developers' sheet.",
+    "currency": "USD",
+    "tax_rate": 0,
+    "pricing_model": "flat_price_by_property_type",
+    "display": {
+      "show_range": true,
+      "range_percent": 0.10,
+      "starting_at_uses_smallest_size": true,
+      "round_to": 5
+    },
+
+    "property_type_mapping": {
+      "_note": "Customer enters beds + baths (+ optional sqft). Map to the nearest row of the relevant service table below. Each service has its own size table; do not assume one table fits all services.",
+      "str_turnover_types": [
+        { "key": "studio", "label": "Studio / 1b1b", "beds": 1, "baths": 1.0, "sqft_min": 0,    "sqft_max": 800 },
+        { "key": "2b15b",  "label": "2b 1.5b",       "beds": 2, "baths": 1.5, "sqft_min": 800,  "sqft_max": 1200 },
+        { "key": "2b2b",   "label": "2b 2b",         "beds": 2, "baths": 2.0, "sqft_min": 800,  "sqft_max": 1200 },
+        { "key": "3b2b",   "label": "3b 2b",         "beds": 3, "baths": 2.0, "sqft_min": 1200, "sqft_max": 1500 },
+        { "key": "3b25b",  "label": "3b 2.5b",       "beds": 3, "baths": 2.5, "sqft_min": 1500, "sqft_max": 2000 },
+        { "key": "4b3b",   "label": "4b 3b",         "beds": 4, "baths": 3.0, "sqft_min": 2000, "sqft_max": 2500 },
+        { "key": "5b4b",   "label": "5b 4b",         "beds": 5, "baths": 4.0, "sqft_min": 2500, "sqft_max": 3000 },
+        { "key": "5b5b",   "label": "5b 5b+",        "beds": 5, "baths": 5.0, "sqft_min": 3000, "sqft_max": 99999 }
+      ]
+    },
+
+    "str_turnover_per_clean": {
+      "_note": "Flat price per turnover by property type. Same values as the subscription per_clean rate.",
+      "studio": 175, "2b15b": 225, "2b2b": 240, "3b2b": 265,
+      "3b25b": 315, "4b3b": 355, "5b4b": 430, "5b5b": 495
+    },
+
+    "str_subscription": {
+      "_note": "TWO tiers. Base = 5 turnovers/month. per_clean = a la carte rate; extra_clean = rate for turnovers beyond 5 (10% below per_clean).",
+      "tiers": ["standard", "premium_care"],
+      "tier_labels": { "standard": "Standard", "premium_care": "Premium Care" },
+      "sizes": [
+        { "key": "studio", "label": "Studio / 1b1b", "standard": 875,  "premium_care": 1125, "per_clean": 175, "extra_clean": 160 },
+        { "key": "2b15b",  "label": "2b 1.5b",       "standard": 1125, "premium_care": 1425, "per_clean": 225, "extra_clean": 200 },
+        { "key": "2b2b",   "label": "2b 2b",         "standard": 1200, "premium_care": 1500, "per_clean": 240, "extra_clean": 215 },
+        { "key": "3b2b",   "label": "3b 2b",         "standard": 1325, "premium_care": 1625, "per_clean": 265, "extra_clean": 240 },
+        { "key": "3b25b",  "label": "3b 2.5b",       "standard": 1575, "premium_care": 1925, "per_clean": 315, "extra_clean": 285 },
+        { "key": "4b3b",   "label": "4b 3b",         "standard": 1775, "premium_care": 2175, "per_clean": 355, "extra_clean": 320 },
+        { "key": "5b4b",   "label": "5b 4b",         "standard": 2150, "premium_care": 2600, "per_clean": 430, "extra_clean": 385 },
+        { "key": "5b5b",   "label": "5b 5b+",        "standard": 2475, "premium_care": 2975, "per_clean": 495, "extra_clean": 445 }
+      ],
+      "features": [
+        { "key": "incl_turnovers",     "label": "5 Regular Turnovers / Month",                 "standard": true,  "premium_care": true },
+        { "key": "incl_inspection",    "label": "Post-Clean Inspection Report",                "standard": true,  "premium_care": true },
+        { "key": "incl_photos",        "label": "Photo Documentation (per clean)",             "standard": true,  "premium_care": true },
+        { "key": "incl_supply_monitor","label": "Supply Level Monitoring & Alerts",            "standard": true,  "premium_care": true },
+        { "key": "incl_restock",       "label": "Restock Coordination",                        "standard": true,  "premium_care": true },
+        { "key": "incl_priority",      "label": "Priority Same-Day Scheduling",                "standard": false, "premium_care": true },
+        { "key": "incl_maintenance",   "label": "Maintenance Issue Reporting + Vendor Coord.", "standard": false, "premium_care": true },
+        { "key": "incl_seasonal",      "label": "1 Seasonal Deep Clean Included / Year",       "standard": false, "premium_care": true },
+        { "key": "incl_account_mgr",   "label": "Dedicated Account Manager",                   "standard": false, "premium_care": true },
+        { "key": "incl_styling",       "label": "Guest-Ready Styling & Staging Check",         "standard": false, "premium_care": true }
+      ],
+      "rules": {
+        "base_turnovers_per_month": 5,
+        "underuse_policy": "Fewer than 5 bookings: crew double-teams for a deeper clean, no refund (time is allocated).",
+        "extra_turnover_billing": "More than 5: extra cleans billed at extra_clean rate (10% below per_clean).",
+        "minimum_commitment_months": 3,
+        "after_commitment": "Month-to-month with 30-day cancellation notice.",
+        "prepay_discount": 0.10,
+        "prepay_note": "10% off any tier, paid quarterly or annually.",
+        "seasonal_deep_clean_premium": "Premium Care only: scheduled twice/year, one included free, second at 50% off.",
+        "per_clean_equivalent_divisor": 5,
+        "nonstandard_size": "Show 'Contact us for custom quote'."
+      }
+    },
+
+    "residential": {
+      "first_visit_deep_clean": {
+        "_note": "Required to start a residential subscription.",
+        "rows": [
+          { "key": "small",  "label": "Small (≤1,200 sqft)",       "sqft_min": 0,    "sqft_max": 1200, "price": 350 },
+          { "key": "medium", "label": "Medium (1,200–1,800 sqft)", "sqft_min": 1200, "sqft_max": 1800, "price": 450 },
+          { "key": "large",  "label": "Large (1,800–2,500 sqft)",  "sqft_min": 1800, "sqft_max": 2500, "price": 595 },
+          { "key": "xl",     "label": "XL (2,500–3,500 sqft)",     "sqft_min": 2500, "sqft_max": 3500, "price": 795 },
+          { "key": "estate", "label": "Estate (3,500+ sqft)",          "sqft_min": 3500, "sqft_max": 99999,"price": 995 }
+        ]
+      },
+      "recurring_per_visit": {
+        "_note": "Price PER VISIT after the first visit. Weekly is cheapest per visit (loyalty); monthly is highest per visit.",
+        "rows": [
+          { "key": "small",  "weekly": 165, "biweekly": 195, "monthly": 225 },
+          { "key": "medium", "weekly": 195, "biweekly": 235, "monthly": 275 },
+          { "key": "large",  "weekly": 245, "biweekly": 295, "monthly": 345 },
+          { "key": "xl",     "weekly": 295, "biweekly": 355, "monthly": 415 },
+          { "key": "estate", "weekly": 365, "biweekly": 435, "monthly": 495 }
+        ]
+      },
+      "monthly_cost_to_client": {
+        "_note": "Recurring per-visit × visits/month. Weekly = 4x, Biweekly = 2x, Monthly = 1x.",
+        "rows": [
+          { "key": "small",  "weekly_4x": 660,  "biweekly_2x": 390, "monthly_1x": 225 },
+          { "key": "medium", "weekly_4x": 780,  "biweekly_2x": 470, "monthly_1x": 275 },
+          { "key": "large",  "weekly_4x": 980,  "biweekly_2x": 590, "monthly_1x": 345 },
+          { "key": "xl",     "weekly_4x": 1180, "biweekly_2x": 710, "monthly_1x": 415 },
+          { "key": "estate", "weekly_4x": 1460, "biweekly_2x": 870, "monthly_1x": 495 }
+        ]
+      }
+    },
+
+    "seasonal_per_service": {
+      "_note": "Comprehensive full-property reset, deeper than Deep Cleaning. Flat by property type.",
+      "studio": 1095, "2b15b": 1295, "2b2b": 1495, "3b2b": 1595,
+      "3b25b": 1795, "4b3b": 2395, "5b4b": 3195, "5b5b": 3695
+    },
+
+    "deep_clean_per_service": {
+      "_note": "After bad checkout / heavy use / room reset. Its own size bands.",
+      "rows": [
+        { "label": "1b1b (≤800)",              "sqft_min": 0,    "sqft_max": 800,  "price": 295 },
+        { "label": "2b2b (800–1,200)",         "sqft_min": 800,  "sqft_max": 1200, "price": 425 },
+        { "label": "3b2b (1,200–1,500)",       "sqft_min": 1200, "sqft_max": 1500, "price": 545 },
+        { "label": "3b2.5b–4b3b (1,500–2,500)", "sqft_min": 1500, "sqft_max": 2500, "price": 695 },
+        { "label": "5b4b+ (2,500–3,500)",      "sqft_min": 2500, "sqft_max": 3500, "price": 895 }
+      ]
+    },
+
+    "move_in_out": {
+      "rows": [
+        { "label": "Apartment / Condo (≤1,200)", "sqft_min": 0,    "sqft_max": 1200, "price": 495 },
+        { "label": "Small House (1,200–1,800)",  "sqft_min": 1200, "sqft_max": 1800, "price": 695 },
+        { "label": "Medium House (1,800–2,500)", "sqft_min": 1800, "sqft_max": 2500, "price": 895 },
+        { "label": "Large House (2,500–3,500)",  "sqft_min": 2500, "sqft_max": 3500, "price": 1195 },
+        { "label": "Estate (3,500+)",                "sqft_min": 3500, "sqft_max": 99999,"price": 1495 }
+      ]
+    },
+
+    "post_construction": {
+      "_note": "Two phases: rough + detail.",
+      "rows": [
+        { "label": "Small Remodel (1 room, ≤500)",       "sqft_min": 0,    "sqft_max": 500,  "price": 495 },
+        { "label": "Medium Remodel (kitchen+bath, 500–1,200)", "sqft_min": 500, "sqft_max": 1200, "price": 895 },
+        { "label": "Full Home (≤2,000)",                 "sqft_min": 0,    "sqft_max": 2000, "price": 1495 },
+        { "label": "Full Home (2,000–3,000)",            "sqft_min": 2000, "sqft_max": 3000, "price": 1995 },
+        { "label": "Large Home / New Build (3,000+)",         "sqft_min": 3000, "sqft_max": 99999,"price": 2495 }
+      ]
+    },
+
+    "str_startup_onboarding": {
+      "_note": "One-time. Documentation + standards + audit + property book. Optional add-ons billed hourly.",
+      "base_le_2000_sqft": 895,
+      "base_gt_2000_sqft": 1195,
+      "over_3500_sqft": "quoted separately",
+      "hourly_add_ons": [
+        { "name": "General / Excessive Condition Cleaning", "rate_per_hour": 50, "per": "cleaner", "note": "Min 2 cleaners; manager pre-approval." },
+        { "name": "Kitchen & Dining Organization",          "rate_per_hour": 70, "per": "job",     "note": "Arrange tableware, declutter, set order." },
+        { "name": "Bedrooms & Living Areas Organization",   "rate_per_hour": 70, "per": "job",     "note": "Standards for pillows/throws/layout; declutter." }
+      ]
+    },
+
+    "add_ons": {
+      "_note": "Add-on menu from the REVISED sheet, aligned to Regular Turnover. Marked 'Manager-only' in the source — confirm which should appear on the PUBLIC calculator. Line total = price × qty. Items with '+cost'/'+receipt' are pass-through at cost.",
+      "items": [
+        { "id": "ao_fridge",     "category": "Kitchen",  "name": "Full Fridge Cleaning",        "price": 30, "unit": "flat",        "qty": false, "note": "Leftovers, spills, stains; incl. sorting & disposal" },
+        { "id": "ao_oven",       "category": "Kitchen",  "name": "Oven Interior Deep Clean",    "price": 30, "unit": "flat",        "qty": false, "note": "Heavy grease / soiling" },
+        { "id": "ao_stove",      "category": "Kitchen",  "name": "Stove Deep Clean",            "price": 15, "unit": "flat",        "qty": false, "note": "Burners + grease removal" },
+        { "id": "ao_dish_1st",   "category": "Kitchen",  "name": "Dishwashing — 1st load",  "price": 0,  "unit": "included",    "qty": false, "note": "First load is free/included" },
+        { "id": "ao_dish_extra", "category": "Kitchen",  "name": "Dishwashing — add’l loads", "price": 15, "unit": "per load", "qty": [1, 6], "note": "Each additional load" },
+        { "id": "ao_pet_hair",   "category": "Pet",      "name": "Pet Hair Removal",            "price": 30, "unit": "flat",        "qty": false, "note": "Vacuum only (no fabric laundering)" },
+        { "id": "ao_pet_waste",  "category": "Pet",      "name": "Pet Waste Removal & Disinfection", "price": 30, "unit": "flat",   "qty": false, "note": "Yard, patio, lawn" },
+        { "id": "ao_walls",      "category": "Walls/Floors/Fabrics", "name": "Wipe Walls",       "price": 25, "unit": "per wall side","qty": [1, 12], "note": "Spot wipe of soiled / marked walls" },
+        { "id": "ao_spot",       "category": "Walls/Floors/Fabrics", "name": "Spot Cleaning (fabric/carpet)", "price": 20, "unit": "per spot", "qty": [1, 10], "note": "Up to 6×6 in, portable extractor" },
+        { "id": "ao_laundry",    "category": "Laundry",  "name": "Wash & Dry Laundry (light items)", "price": 20, "unit": "per load", "qty": [1, 6], "note": "Decorative pillows, bathroom curtains" },
+        { "id": "ao_laundry_run","category": "Laundry",  "name": "Laundry Run (bulky items)",   "price": 30, "unit": "per run",     "qty": false, "note": "$30 + actual cost; drop-off/pickup at laundromat", "pass_through": true },
+        { "id": "ao_grill",      "category": "Outdoor",  "name": "Grill Deep Clean",            "price": 85, "unit": "flat",        "qty": false, "note": "Exterior, grates, drip tray, ash, polish" },
+        { "id": "ao_outdoor_stain","category": "Outdoor","name": "Outdoor Stain Washing",       "price": 15, "unit": "per spot",    "qty": [1, 6], "note": "Patio / deck / garage surfaces" },
+        { "id": "ao_ozone",      "category": "Odor",     "name": "Ozone Machine Odor Removal",  "price": 50, "unit": "per hour",    "qty": [4, 8], "note": "Min 4 hrs; property vacant; incl. wipe-down after" },
+        { "id": "ao_win_both",   "category": "Windows",  "name": "Windows — inside + outside", "price": 10, "unit": "per window", "qty": [1, 30], "note": "Both sides cleaned" },
+        { "id": "ao_win_in",     "category": "Windows",  "name": "Windows — inside only",   "price": 5,  "unit": "per window",  "qty": [1, 30], "note": "Inside-only clean" },
+        { "id": "ao_charge",     "category": "Misc",     "name": "Charging Cameras / Smart Devices", "price": 0, "unit": "included","qty": false, "note": "Pre-arrival device charging" },
+        { "id": "ao_crib",       "category": "Misc",     "name": "Baby Crib / Fold-Out Bed Packing", "price": 10, "unit": "flat",  "qty": false, "note": "Assembly + bedding; up to 10 min" },
+        { "id": "ao_trash",      "category": "Misc",     "name": "Extra Trash Removal",         "price": 20, "unit": "per 13-gal bag","qty": [1, 8], "note": "When bins already full" },
+        { "id": "ao_flower",     "category": "Misc",     "name": "Flower / Fruit Pickup",       "price": 20, "unit": "flat",        "qty": false, "note": "$20 + receipt; pickup + delivery", "pass_through": true }
+      ]
+    },
+
+    "escalations": {
+      "_note": "Manager-applied condition upcharges (usually not on the public calculator).",
+      "items": [
+        { "id": "esc_deep_room",   "name": "Deep Beyond Normal Cleaning",        "price": 50, "unit": "per room",             "note": "Trash on floor, stains, cabinet messes" },
+        { "id": "esc_excessive",   "name": "Extra Cleaning / Excessive Condition","price": 50, "unit": "per hour per cleaner","note": "Min 2 cleaners; manager pre-approval" },
+        { "id": "esc_contracted",  "name": "Contracted Extra Services",           "price_pct": 0.10, "unit": "of contractor invoice", "note": "When STR coordinates an external contractor" }
+      ]
+    },
+
+    "surcharges": {
+      "_note": "Flat amounts added after the service price + add-ons.",
+      "emergency_sameday": { "label": "Emergency Same-Day Call-Out", "amount": 50,  "on_calculator": true,  "trigger": "checkbox 'I need this today'" },
+      "sunday_holiday":     { "label": "Sunday & Holiday Surcharge",  "amount": 50,  "on_calculator": true,  "trigger": "auto if date = Sunday or holiday" },
+      "late_cancel":        { "label": "Late Cancellation (< 24 hrs)","amount": 100, "on_calculator": false, "trigger": "policy fee, billed manually" },
+      "waiting_time":       { "label": "Waiting Time (> 15 min)",     "amount": 25,  "on_calculator": false, "trigger": "per 30-min increment, billed manually" }
+    },
+
+    "emergency_restoration": {
+      "_note": "Specialty services; mostly custom-quoted, not on the self-serve calculator.",
+      "items": [
+        { "name": "Emergency Same-Day Call-Out",   "price": 50,   "unit": "surcharge" },
+        { "name": "Emergency Supervisor Dispatch", "price_pct": 0.10, "unit": "of approved damage claim total" },
+        { "name": "Ozone Machine Treatment",       "price": 75,   "unit": "flat", "note": "Min 4 hrs; property vacant" },
+        { "name": "Flood / Water Damage Response",  "price": null, "unit": "custom" }
+      ]
+    },
+
+    "agent_partnership": {
+      "_note": "B2B program for real-estate agents. Separate from the customer calculator; include as an optional module or a separate page.",
+      "hourly_services": [
+        { "name": "Pre-Listing Property Prep", "rate_per_hour": 65, "min_hours": 3 },
+        { "name": "Open House Prep",            "rate_per_hour": 55, "min_hours": 2 },
+        { "name": "Post-Showing Clean-Up",      "rate_per_hour": 55, "min_hours": 1 },
+        { "name": "Move-Out Coordination",      "rate_per_hour": 65, "min_hours": 4 },
+        { "name": "Property Inspection Walk",   "rate_per_hour": 55, "min_hours": 1 },
+        { "name": "Staging Assist",             "rate_per_hour": 65, "min_hours": 3 }
+      ],
+      "tiers": [
+        { "tier": "Standard", "referrals_per_year": 0,  "referral_commission": 0.05, "hourly_rate": 65 },
+        { "tier": "Silver",   "referrals_per_year": 5,  "referral_commission": 0.08, "hourly_rate": 60 },
+        { "tier": "Gold",     "referrals_per_year": 10, "referral_commission": 0.10, "hourly_rate": 55 }
+      ]
+    }
+  }
+}

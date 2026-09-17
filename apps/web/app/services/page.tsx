@@ -6,7 +6,7 @@ import { ServicesContactForm } from '@/components/ServicesContactForm'
 
 export const metadata = {
   title: 'Services — STR Cleaning Crew',
-  description: 'Tailored cleaning packages for short-term rental properties.',
+  description: 'Tailored cleaning packages for short-term rental and residential properties.',
 }
 
 const VALUES = [
@@ -48,7 +48,7 @@ export default function ServicesPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end">
           <div className="flex flex-col gap-6">
             <p className="font-marcellus text-sm text-dark-brown opacity-70 leading-relaxed max-w-[420px]">
-              We specialize exclusively in short-term rental property care — from routine turnovers to deep cleans, seasonal maintenance, and emergency response. Every package is built around the unique demands of STR hosting.
+              We offer two tailored service tracks: STR Cleaning built around the demands of short-term rental hosting — routine turnovers, deep cleans, seasonal maintenance, and emergency response — and Residential Cleaning for homes, with regular, deep, move-in, and move-out options.
             </p>
             <div className="w-40 h-px bg-dark-brown/30" />
           </div>
@@ -87,6 +87,27 @@ export default function ServicesPage() {
                 className="self-start px-6 py-2.5 rounded-full border border-dark-brown/40 font-marcellus text-sm no-underline text-dark-brown hover:bg-dark-brown hover:text-stone transition-colors"
               >
                 View packages
+              </Link>
+            </div>
+          </div>
+
+          {/* Residential */}
+          <div className="border border-dark-brown/15 rounded-xl overflow-hidden flex flex-col">
+            <div className="relative aspect-[4/3]">
+              <Image
+                src="/images/unsplash-image-P4ep6vg92DA.webp"
+                alt="Residential cleaning"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="p-6 flex flex-col gap-4 flex-1">
+              <h3 className="font-marcellus text-lg">Residential Cleaning</h3>
+              <Link
+                href="/residential"
+                className="self-start px-6 py-2.5 rounded-full border border-dark-brown/40 font-marcellus text-sm no-underline text-dark-brown hover:bg-dark-brown hover:text-stone transition-colors"
+              >
+                Learn more
               </Link>
             </div>
           </div>

@@ -12,6 +12,7 @@
     "@aws-sdk/client-ses": "^3.1020.0",
     "@aws-sdk/util-dynamodb": "^3.996.2",
     "@babel/generator": "^7.29.1",
+    "esbuild": "^0.25.0",
     "turbo": "^2.4.0"
   },
   "pnpm": {

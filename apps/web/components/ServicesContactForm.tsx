@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { submitContactInquiry } from '@/app/actions/contactInquiry'
 
 function inputClass() {
   return 'w-full border border-dark-brown/30 bg-transparent rounded px-3 py-3 font-marcellus text-sm text-dark-brown outline-none focus:border-dark-brown/70 transition-colors'
@@ -8,10 +9,30 @@ function inputClass() {
 
 export function ServicesContactForm() {
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setSubmitted(true)
+    setSubmitting(true)
+    setError('')
+    const fd = new FormData(e.currentTarget)
+    try {
+      await submitContactInquiry({
+        firstName: String(fd.get('firstName') ?? ''),
+        lastName:  String(fd.get('lastName') ?? ''),
+        email:     String(fd.get('email') ?? ''),
+        phone:     String(fd.get('phone') ?? ''),
+        services:  fd.getAll('service').map(String),
+        startDate: String(fd.get('startDate') ?? ''),
+        details:   String(fd.get('details') ?? ''),
+      })
+      setSubmitted(true)
+    } catch {
+      setError('Something went wrong. Please try again or contact us directly.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -34,13 +55,13 @@ export function ServicesContactForm() {
             <label className="font-marcellus text-xs text-dark-brown opacity-50">
               First Name <span className="opacity-70">(required)</span>
             </label>
-            <input type="text" required className={inputClass()} />
+            <input type="text" name="firstName" required className={inputClass()} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="font-marcellus text-xs text-dark-brown opacity-50">
               Last Name <span className="opacity-70">(required)</span>
             </label>
-            <input type="text" required className={inputClass()} />
+            <input type="text" name="lastName" required className={inputClass()} />
           </div>
         </div>
       </div>
@@ -50,7 +71,7 @@ export function ServicesContactForm() {
         <label className="font-marcellus text-xs text-dark-brown opacity-50">
           Email <span className="opacity-70">(required)</span>
         </label>
-        <input type="email" required className={inputClass()} />
+        <input type="email" name="email" required className={inputClass()} />
       </div>
 
       {/* Phone */}
@@ -58,7 +79,7 @@ export function ServicesContactForm() {
         <label className="font-marcellus text-xs text-dark-brown opacity-50">
           Phone <span className="opacity-70">(required)</span>
         </label>
-        <input type="tel" required className={inputClass()} />
+        <input type="tel" name="phone" required className={inputClass()} />
       </div>
 
       {/* Service type */}
@@ -71,6 +92,10 @@ export function ServicesContactForm() {
             <input type="checkbox" name="service" value="str-cleaning" className="accent-dark-brown" />
             STR Cleaning
           </label>
+          <label className="flex items-center gap-2 font-marcellus text-sm text-dark-brown opacity-70 cursor-pointer">
+            <input type="checkbox" name="service" value="residential" className="accent-dark-brown" />
+            Residential
+          </label>
         </div>
       </div>
 
@@ -79,7 +104,7 @@ export function ServicesContactForm() {
         <label className="font-marcellus text-xs text-dark-brown opacity-50">
           Preferred Start Date <span className="opacity-70">(required)</span>
         </label>
-        <input type="date" required className={inputClass()} />
+        <input type="date" name="startDate" required className={inputClass()} />
       </div>
 
       {/* Project details */}
@@ -88,6 +113,7 @@ export function ServicesContactForm() {
           Project Details <span className="opacity-70">(required)</span>
         </label>
         <textarea
+          name="details"
           required
           rows={4}
           placeholder="Tell me about your project goals."
@@ -95,12 +121,15 @@ export function ServicesContactForm() {
         />
       </div>
 
+      {error && <p className="font-marcellus text-sm text-red-600 opacity-80">{error}</p>}
+
       <div>
         <button
           type="submit"
-          className="px-9 py-3 rounded-full bg-dark-brown text-stone font-marcellus text-sm cursor-pointer border-none hover:opacity-80 transition-opacity"
+          disabled={submitting}
+          className="px-9 py-3 rounded-full bg-dark-brown text-stone font-marcellus text-sm cursor-pointer border-none hover:opacity-80 disabled:opacity-50 transition-opacity"
         >
-          Submit
+          {submitting ? 'Sending…' : 'Submit'}
         </button>
       </div>
     </form>

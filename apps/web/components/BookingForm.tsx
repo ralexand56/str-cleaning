@@ -3,171 +3,85 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { submitBooking } from '@/app/actions/booking'
+import { BookingCardCapture, type CardCaptureResult } from '@/components/BookingCardCapture'
+import { ADD_ONS, PUBLIC_ADD_ON_IDS } from '@/lib/pricing/addOns'
+import {
+  SERVICES_BY_CATEGORY,
+  SERVICE_LABELS,
+  applySurcharges,
+  calculateEstimate,
+  getSizeOptions,
+  mapSqftToSizeKey,
+} from '@/lib/pricing/engine'
+import type {
+  EstimateResult,
+  Frequency,
+  PropertyCategory,
+  SelectedAddOn,
+  ServiceKey,
+  SizeOption,
+} from '@/lib/pricing/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ServiceType = 'Regular Turnover' | 'Deep Cleaning' | 'Seasonal Cleaning' | 'StartUp Service' | 'Standard Subscription' | 'Premium Care'
-type PropertySize = 'Studio / 1b1b' | '2b 1.5b' | '2b 2b' | '3b 2b' | '3b 2.5b' | '4b 3b' | '5b 4b' | '5b 5b+'
-type TimeWindow  = 'Morning (8am–12pm)' | 'Afternoon (12pm–4pm)' | 'Flexible'
-type Frequency   = 'One-time' | 'Weekly' | 'Bi-weekly' | 'Monthly'
+type TimeWindow = 'Morning (8am–12pm)' | 'Afternoon (12pm–4pm)' | 'Flexible'
 
 interface FormData {
-  serviceType:  ServiceType | ''
-  propertySize: PropertySize | ''
-  extras:       string[]
-  date:         string
-  timeWindow:   TimeWindow | ''
-  frequency:    Frequency | ''
-  address:      string
-  unit:         string
-  city:         string
-  state:        string
-  zip:          string
-  firstName:    string
-  lastName:     string
-  email:        string
-  phone:        string
-  notes:        string
+  category: PropertyCategory
+  serviceKey: ServiceKey | ''
+  sizeKey: string
+  sqftInput: string
+  addOns: SelectedAddOn[]
+  date: string
+  timeWindow: TimeWindow | ''
+  frequency: Frequency | ''
+  emergencySameDay: boolean
+  address: string
+  unit: string
+  city: string
+  state: string
+  zip: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  notes: string
+  stripeCustomerId: string
+  stripePaymentMethodId: string
+  customerId: string
 }
 
-// ─── Pricing tables ───────────────────────────────────────────────────────────
+// ─── Static metadata ──────────────────────────────────────────────────────────
 
-const PROPERTY_SIZES: { label: PropertySize; sqft: string }[] = [
-  { label: 'Studio / 1b1b', sqft: '≤ 800 sqft' },
-  { label: '2b 1.5b',       sqft: '800–1,200 sqft' },
-  { label: '2b 2b',         sqft: '800–1,200 sqft' },
-  { label: '3b 2b',         sqft: '1,200–1,500 sqft' },
-  { label: '3b 2.5b',       sqft: '1,500–2,000 sqft' },
-  { label: '4b 3b',         sqft: '2,000–2,500 sqft' },
-  { label: '5b 4b',         sqft: '2,500–3,000 sqft' },
-  { label: '5b 5b+',        sqft: '3,000+ sqft' },
+const STR_SERVICE_META: Record<ServiceKey, { tagline: string; group: string }> = {
+  str_turnover: { tagline: 'Full turnover — inspection, cleaning, restocking, photo report.', group: 'Cleaning' },
+  str_deep: { tagline: 'Everything in Regular plus appliances, grout, baseboards, and more.', group: 'Cleaning' },
+  str_seasonal: { tagline: 'Most comprehensive — Regular + Deep + preventive maintenance.', group: 'Cleaning' },
+  str_startup: { tagline: 'One-time deep clean, supply setup, and guest-ready styling for new listings.', group: 'One-Time' },
+  str_subscription_standard: { tagline: 'Five turnovers per month, same crew, priority scheduling.', group: 'Subscription' },
+  str_subscription_premium: { tagline: 'Everything in Standard plus zero-friction scheduling and a dedicated account manager.', group: 'Subscription' },
+  residential_first_visit: { tagline: '', group: '' },
+  residential_recurring: { tagline: '', group: '' },
+  move_in_out: { tagline: '', group: '' },
+  post_construction: { tagline: '', group: '' },
+}
+
+const SERVICE_GROUPS = ['Cleaning', 'One-Time', 'Subscription'] as const
+
+const RESIDENTIAL_FREQUENCIES: { value: Frequency; tagline: string }[] = [
+  { value: 'Weekly', tagline: 'Cheapest per-visit rate — our most popular plan.' },
+  { value: 'Bi-weekly', tagline: 'A balance of upkeep and cost.' },
+  { value: 'Monthly', tagline: 'Lightest touch, highest per-visit rate.' },
 ]
-
-const PRICING: Record<PropertySize, Record<ServiceType, number>> = {
-  'Studio / 1b1b': { 'Regular Turnover': 175,  'Deep Cleaning': 265,  'Seasonal Cleaning': 1095, 'StartUp Service': 895,  'Standard Subscription': 875,  'Premium Care': 1125 },
-  '2b 1.5b':       { 'Regular Turnover': 225,  'Deep Cleaning': 335,  'Seasonal Cleaning': 1295, 'StartUp Service': 895,  'Standard Subscription': 1125, 'Premium Care': 1375 },
-  '2b 2b':         { 'Regular Turnover': 240,  'Deep Cleaning': 425,  'Seasonal Cleaning': 1495, 'StartUp Service': 895,  'Standard Subscription': 1200, 'Premium Care': 1500 },
-  '3b 2b':         { 'Regular Turnover': 265,  'Deep Cleaning': 475,  'Seasonal Cleaning': 1595, 'StartUp Service': 895,  'Standard Subscription': 1325, 'Premium Care': 1625 },
-  '3b 2.5b':       { 'Regular Turnover': 315,  'Deep Cleaning': 555,  'Seasonal Cleaning': 1795, 'StartUp Service': 895,  'Standard Subscription': 1575, 'Premium Care': 1925 },
-  '4b 3b':         { 'Regular Turnover': 355,  'Deep Cleaning': 625,  'Seasonal Cleaning': 2395, 'StartUp Service': 1195, 'Standard Subscription': 1775, 'Premium Care': 2175 },
-  '5b 4b':         { 'Regular Turnover': 430,  'Deep Cleaning': 865,  'Seasonal Cleaning': 3195, 'StartUp Service': 1195, 'Standard Subscription': 2150, 'Premium Care': 2600 },
-  '5b 5b+':        { 'Regular Turnover': 495,  'Deep Cleaning': 995,  'Seasonal Cleaning': 3695, 'StartUp Service': 1195, 'Standard Subscription': 2475, 'Premium Care': 2975 },
-}
-
-type AtAGlanceRow = { label: string; value: string }
-
-const AT_A_GLANCE: Record<ServiceType, { rows: AtAGlanceRow[]; note?: string }> = {
-  'Regular Turnover': {
-    rows: [
-      { label: 'Frequency',     value: 'After every checkout' },
-      { label: 'Time on site',  value: '2–5 hrs · 1 cleaner' },
-      { label: 'Crew',          value: 'Professional, background-checked' },
-      { label: 'Price range',   value: '$115 – $345 per clean' },
-      { label: 'Depends on',    value: 'Bedrooms, bathrooms, sq ft' },
-    ],
-  },
-  'Deep Cleaning': {
-    rows: [
-      { label: 'Frequency',     value: 'Every 3–6 months' },
-      { label: 'Time on site',  value: 'Half / full day · 2 cleaners' },
-      { label: 'Tiered rate',   value: '1.5× / 1.75× / 2× of Regular' },
-      { label: 'Price range',   value: '$265 – $995 per visit' },
-      { label: 'Best for',      value: 'Post-heavy-use, owner stays' },
-    ],
-  },
-  'Seasonal Cleaning': {
-    rows: [
-      { label: 'Frequency',     value: '2–3× per year' },
-      { label: 'Time on site',  value: '1–2 days · 2 + contractors' },
-      { label: 'Cadence',       value: 'Spring + fall is most common' },
-      { label: 'Price range',   value: '$1,095 – $3,695 per visit' },
-      { label: 'Includes',      value: 'Preventive maintenance report' },
-    ],
-  },
-  'StartUp Service': {
-    rows: [
-      { label: 'Type',          value: 'One-time onboarding' },
-      { label: 'Includes',      value: 'Deep clean, supply setup, styling' },
-      { label: 'Under 2,000 sf', value: '$895 flat' },
-      { label: 'Over 2,000 sf',  value: '$1,195 flat' },
-      { label: 'Optional',      value: 'Extra cleaning $50/hr · Organizing $70/hr' },
-    ],
-    note: 'Flat fee — no per-clean rate applies.',
-  },
-  'Standard Subscription': {
-    rows: [
-      { label: 'Includes',      value: '5 turnovers per month' },
-      { label: 'Scheduling',    value: 'Priority over one-off bookings' },
-      { label: 'Add-ons',       value: '10% off' },
-      { label: 'Billing',       value: 'Monthly · predictable cash flow' },
-      { label: 'Pricing',       value: 'Per-clean rate × 5 / month' },
-    ],
-  },
-  'Premium Care': {
-    rows: [
-      { label: 'Includes',      value: 'Everything in Standard, plus:' },
-      { label: 'Add-ons',       value: '15% off (vs 10%)' },
-      { label: 'Cancellation',  value: 'No fee up to 12 hrs notice' },
-      { label: 'Scheduling',    value: 'Top-of-queue on short notice' },
-      { label: 'Support',       value: 'Dedicated account manager' },
-    ],
-    note: 'Standard rate + $250–$500 / month based on property size.',
-  },
-}
-
-const SERVICE_OPTIONS: { type: ServiceType; tagline: string; group: string }[] = [
-  { type: 'Regular Turnover',      tagline: 'Full turnover — inspection, cleaning, restocking, photo report.',                      group: 'Cleaning' },
-  { type: 'Deep Cleaning',         tagline: 'Everything in Regular plus appliances, grout, baseboards, and more.',                  group: 'Cleaning' },
-  { type: 'Seasonal Cleaning',     tagline: 'Most comprehensive — Regular + Deep + preventive maintenance.',                        group: 'Cleaning' },
-  { type: 'StartUp Service',       tagline: 'One-time deep clean, supply setup, and guest-ready styling for new listings.',         group: 'One-Time' },
-  { type: 'Standard Subscription', tagline: 'Five turnovers per month, same crew, priority scheduling, 10% off add-ons.',          group: 'Subscription' },
-  { type: 'Premium Care',          tagline: 'Everything in Standard plus zero-friction scheduling and a dedicated account manager.', group: 'Subscription' },
-]
-
-const EXTRA_OPTIONS: { label: string; price: string; note: string }[] = [
-  { label: 'Full Fridge Cleaning',         price: '$30',  note: 'Leftovers, spills, sorting & disposal' },
-  { label: 'Oven Interior Deep Clean',     price: '$30',  note: 'Heavy grease / soiling' },
-  { label: 'Stove Deep Clean',             price: '$15',  note: 'Burners + grease removal' },
-  { label: 'Pet Hair Removal',             price: '$30',  note: 'Vacuum only' },
-  { label: 'Pet Waste Removal',            price: '$30',  note: 'Yard, patio, lawn' },
-  { label: 'Grill Deep Clean',             price: '$85',  note: 'Grates, drip tray, ash, polish' },
-  { label: 'Wash & Dry Laundry',           price: '$20',  note: 'Per load, light items' },
-  { label: 'Windows (inside + outside)',   price: '$10',  note: 'Per window, both sides' },
-  { label: 'Ozone Odor Removal',           price: '$50',  note: 'Per hour, min 4 hrs, vacant property' },
-  { label: 'Extra Trash Removal',          price: '$20',  note: 'Per 13-gal bag when bins are full' },
-]
-
-const STARTUP_FLAT: Record<PropertySize, number> = {
-  'Studio / 1b1b': 895, '2b 1.5b': 895, '2b 2b': 895, '3b 2b': 895, '3b 2.5b': 895,
-  '4b 3b': 1195, '5b 4b': 1195, '5b 5b+': 1195,
-}
-
-function isStartUp(t: ServiceType | ''): boolean { return t === 'StartUp Service' }
-
-function calcTotal(data: FormData): number {
-  if (!data.serviceType || !data.propertySize) return 0
-  const base = isStartUp(data.serviceType)
-    ? STARTUP_FLAT[data.propertySize]
-    : PRICING[data.propertySize][data.serviceType]
-  const extras = data.extras.reduce((sum, label) => {
-    const opt = EXTRA_OPTIONS.find(o => o.label === label)
-    if (!opt) return sum
-    const n = parseInt(opt.price.replace(/[^0-9]/g, ''))
-    return sum + (isNaN(n) ? 0 : n)
-  }, 0)
-  return base + extras
-}
-
-// ─── Step metadata ────────────────────────────────────────────────────────────
 
 const STEP_TITLES = ['', 'Service Type', 'Property Size', 'Schedule', 'Address', 'Contact', 'Review & Book']
 const TOTAL_STEPS = 6
 
 function isStepValid(step: number, data: FormData): boolean {
   switch (step) {
-    case 1: return !!data.serviceType
-    case 2: return !!data.propertySize
-    case 3: return !!data.date && !!data.timeWindow && !!data.frequency
+    case 1: return data.category === 'residential' ? !!data.frequency : !!data.serviceKey
+    case 2: return !!data.sizeKey
+    case 3: return !!data.date && !!data.timeWindow
     case 4: return !!data.address.trim() && !!data.city.trim() && !!data.state.trim() && !!data.zip.trim()
     case 5: return !!data.firstName.trim() && !!data.lastName.trim() && !!data.email.trim() && !!data.phone.trim()
     default: return true
@@ -176,15 +90,16 @@ function isStepValid(step: number, data: FormData): boolean {
 
 function stepSummary(step: number, data: FormData): string {
   switch (step) {
-    case 1: return data.serviceType
+    case 1:
+      return data.category === 'residential' ? `Residential · ${data.frequency}` : SERVICE_LABELS[data.serviceKey as ServiceKey]
     case 2: {
-      const ext = data.extras.length ? ` · ${data.extras.length} add-on${data.extras.length !== 1 ? 's' : ''}` : ''
-      return `${data.propertySize}${ext}`
+      const ext = data.addOns.length ? ` · ${data.addOns.length} add-on${data.addOns.length !== 1 ? 's' : ''}` : ''
+      return `${data.sizeKey}${ext}`
     }
     case 3: {
-      const d  = new Date(data.date + 'T12:00')
+      const d = new Date(data.date + 'T12:00')
       const ds = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      return `${ds} · ${data.timeWindow} · ${data.frequency}`
+      return `${ds} · ${data.timeWindow}`
     }
     case 4:
       return `${data.address}${data.unit ? ` #${data.unit}` : ''}, ${data.city}, ${data.state} ${data.zip}`
@@ -192,6 +107,66 @@ function stepSummary(step: number, data: FormData): string {
       return `${data.firstName} ${data.lastName} · ${data.email}`
     default: return ''
   }
+}
+
+// ─── Estimate helper (shared by Step6 + BookingSummary) ──────────────────────
+
+interface Estimates {
+  primaryLabel: string
+  primary: EstimateResult
+  secondaryLabel?: string
+  secondary?: EstimateResult
+}
+
+function getEstimates(data: FormData): Estimates {
+  if (data.category === 'residential') {
+    const primary = calculateEstimate({
+      category: 'residential',
+      serviceKey: 'residential_first_visit',
+      sizeKey: data.sizeKey || null,
+      addOns: data.addOns,
+      emergencySameDay: data.emergencySameDay,
+      serviceDate: data.date,
+    })
+    const secondary = calculateEstimate({
+      category: 'residential',
+      serviceKey: 'residential_recurring',
+      sizeKey: data.sizeKey || null,
+      frequency: data.frequency || undefined,
+      addOns: [],
+    })
+    return {
+      primaryLabel: 'First-visit deep clean (one-time)',
+      primary,
+      secondaryLabel: data.frequency ? `Then, ${data.frequency.toLowerCase()} visits` : 'Then, recurring visits',
+      secondary,
+    }
+  }
+
+  const serviceKey = (data.serviceKey || 'str_turnover') as ServiceKey
+  const primary = calculateEstimate({
+    category: 'str',
+    serviceKey,
+    sizeKey: data.sizeKey || null,
+    addOns: data.addOns,
+    emergencySameDay: data.emergencySameDay,
+    serviceDate: data.date,
+  })
+  return { primaryLabel: data.serviceKey ? SERVICE_LABELS[serviceKey] : '', primary }
+}
+
+function formatMoney(n: number): string {
+  return `$${n.toLocaleString()}`
+}
+
+function EstimateLine({ result }: { result: EstimateResult }) {
+  if (result.contactForQuote) {
+    return <span className="font-marcellus text-sm opacity-50">Contact us for a custom quote</span>
+  }
+  if (!result.range) {
+    return <span className="font-marcellus text-sm">{formatMoney(result.subtotal)}</span>
+  }
+  return <span className="font-marcellus text-sm">{formatMoney(result.range.low)}–{formatMoney(result.range.high)}</span>
 }
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -206,151 +181,229 @@ const inputCls = 'font-marcellus text-base bg-transparent border-b border-dark-b
 
 // ─── Step content ─────────────────────────────────────────────────────────────
 
-function AtAGlanceSidebar({ type }: { type: ServiceType }) {
-  const info = AT_A_GLANCE[type]
+function CategoryToggle({ data, update }: { data: FormData; update: (p: Partial<FormData>) => void }) {
+  const options: { value: PropertyCategory; label: string }[] = [
+    { value: 'str', label: 'Short-Term Rental' },
+    { value: 'residential', label: 'Residential Home' },
+  ]
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-2xl border border-dark-brown/12 bg-stone/60 px-5 py-5 flex flex-col gap-2.5 min-w-[220px]"
-    >
-      <p className="font-marcellus text-xs opacity-40 uppercase tracking-widest mb-1">At a glance</p>
-      {info.rows.map(row => (
-        <div key={row.label} className="flex flex-col gap-0.5">
-          <span className="font-marcellus text-xs opacity-35 uppercase tracking-wider">{row.label}</span>
-          <span className="font-marcellus text-sm opacity-80">{row.value}</span>
-        </div>
+    <div className="flex gap-3 mb-8">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => update({ category: opt.value, serviceKey: '', sizeKey: '', sqftInput: '', addOns: [], frequency: '' })}
+          className={[
+            'px-6 py-3 rounded-full border font-marcellus text-sm transition-all duration-150 cursor-pointer',
+            data.category === opt.value ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/20 hover:border-dark-brown/50',
+          ].join(' ')}
+        >
+          {opt.label}
+        </button>
       ))}
-      {info.note && (
-        <p className="font-marcellus text-xs opacity-35 mt-1 border-t border-dark-brown/10 pt-2">{info.note}</p>
-      )}
-    </motion.div>
+    </div>
   )
 }
 
-const SERVICE_GROUPS = ['Cleaning', 'One-Time', 'Subscription'] as const
-
 function Step1({ data, update }: { data: FormData; update: (p: Partial<FormData>) => void }) {
+  if (data.category === 'residential') {
+    return (
+      <div className="flex flex-col gap-6">
+        <CategoryToggle data={data} update={update} />
+        <p className="font-marcellus text-sm opacity-50 max-w-lg">
+          Residential service starts with a required first-visit deep clean, then settles into recurring
+          cleanings at the frequency you choose below.
+        </p>
+        <div className="flex flex-col gap-2 max-w-lg">
+          {RESIDENTIAL_FREQUENCIES.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => update({ frequency: f.value })}
+              className={[
+                'text-left px-6 py-5 rounded-2xl border transition-all duration-200 cursor-pointer',
+                data.frequency === f.value ? 'border-dark-brown bg-dark-brown/5' : 'border-dark-brown/15 hover:border-dark-brown/35',
+              ].join(' ')}
+            >
+              <span className="font-marcellus text-base">{f.value}</span>
+              <p className="font-marcellus text-sm opacity-40 mt-1">{f.tagline}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const strServices = SERVICES_BY_CATEGORY.str
   return (
     <div className="flex gap-6 items-start">
       <div className="flex flex-col gap-6 flex-1">
-        {SERVICE_GROUPS.map(group => (
+        <CategoryToggle data={data} update={update} />
+        {SERVICE_GROUPS.map((group) => (
           <div key={group}>
             <p className="font-marcellus text-xs opacity-35 uppercase tracking-widest mb-2">{group}</p>
             <div className="flex flex-col gap-2">
-              {SERVICE_OPTIONS.filter(s => s.group === group).map(svc => (
-                <button
-                  key={svc.type}
-                  type="button"
-                  onClick={() => update({ serviceType: svc.type })}
-                  className={[
-                    'text-left px-6 py-5 rounded-2xl border transition-all duration-200 cursor-pointer',
-                    data.serviceType === svc.type
-                      ? 'border-dark-brown bg-dark-brown/5'
-                      : 'border-dark-brown/15 hover:border-dark-brown/35',
-                  ].join(' ')}
-                >
-                  <div className="flex items-baseline justify-between gap-4">
-                    <span className="font-marcellus text-base">{svc.type}</span>
-                    {data.propertySize && (
-                      <span className="font-marcellus text-sm opacity-40 flex-shrink-0">
-                        ${(isStartUp(svc.type) ? STARTUP_FLAT[data.propertySize] : PRICING[data.propertySize][svc.type]).toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                  <p className="font-marcellus text-sm opacity-40 mt-1">{svc.tagline}</p>
-                </button>
-              ))}
+              {strServices
+                .filter((key) => STR_SERVICE_META[key].group === group)
+                .map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => update({ serviceKey: key, sizeKey: '', sqftInput: '' })}
+                    className={[
+                      'text-left px-6 py-5 rounded-2xl border transition-all duration-200 cursor-pointer',
+                      data.serviceKey === key ? 'border-dark-brown bg-dark-brown/5' : 'border-dark-brown/15 hover:border-dark-brown/35',
+                    ].join(' ')}
+                  >
+                    <span className="font-marcellus text-base">{SERVICE_LABELS[key]}</span>
+                    <p className="font-marcellus text-sm opacity-40 mt-1">{STR_SERVICE_META[key].tagline}</p>
+                  </button>
+                ))}
             </div>
           </div>
         ))}
       </div>
-      <AnimatePresence mode="wait">
-        {data.serviceType && (
-          <div className="hidden md:block w-[240px] flex-shrink-0 sticky top-4">
-            <AtAGlanceSidebar key={data.serviceType} type={data.serviceType} />
+    </div>
+  )
+}
+
+function AddOnRow({ addOn, selected, onToggle, onQtyChange }: {
+  addOn: (typeof ADD_ONS)[number]
+  selected: SelectedAddOn | undefined
+  onToggle: () => void
+  onQtyChange: (qty: number) => void
+}) {
+  const isSelected = !!selected
+  return (
+    <div
+      className={[
+        'px-5 py-3 rounded-xl border font-marcellus text-sm transition-all duration-150 flex items-center justify-between gap-4',
+        isSelected ? 'border-dark-brown bg-dark-brown/5' : 'border-dark-brown/15 hover:border-dark-brown/35',
+      ].join(' ')}
+    >
+      <button type="button" onClick={onToggle} className="text-left flex-1 cursor-pointer bg-transparent border-none p-0 font-marcellus">
+        {addOn.name} <span className="opacity-40 text-xs">— {addOn.note}</span>
+      </button>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {isSelected && addOn.qtyRange && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onQtyChange(Math.max(addOn.qtyRange ? addOn.qtyRange[0] : 1, (selected?.qty ?? 1) - 1))}
+              className="w-6 h-6 rounded-full border border-dark-brown/25 flex items-center justify-center cursor-pointer bg-transparent"
+            >
+              −
+            </button>
+            <span className="w-5 text-center">{selected?.qty ?? 1}</span>
+            <button
+              type="button"
+              onClick={() => onQtyChange(Math.min(addOn.qtyRange ? addOn.qtyRange[1] : 99, (selected?.qty ?? 1) + 1))}
+              className="w-6 h-6 rounded-full border border-dark-brown/25 flex items-center justify-center cursor-pointer bg-transparent"
+            >
+              +
+            </button>
           </div>
         )}
-      </AnimatePresence>
+        <span className="opacity-50">{addOn.price === 0 ? 'Included' : `$${addOn.price}${addOn.unit !== 'flat' && addOn.unit !== 'included' ? ` / ${addOn.unit}` : ''}`}</span>
+      </div>
     </div>
   )
 }
 
 function Step2({ data, update }: { data: FormData; update: (p: Partial<FormData>) => void }) {
-  function toggleExtra(label: string) {
+  const effectiveServiceKey: ServiceKey = data.category === 'str'
+    ? (data.serviceKey as ServiceKey)
+    : 'residential_first_visit'
+  const sizeOptions: SizeOption[] = effectiveServiceKey ? getSizeOptions(data.category, effectiveServiceKey) : []
+
+  function handleSqftChange(v: string) {
+    update({ sqftInput: v })
+    const n = parseInt(v, 10)
+    if (!isNaN(n) && effectiveServiceKey) {
+      const key = mapSqftToSizeKey(data.category, effectiveServiceKey, n)
+      if (key) update({ sizeKey: key })
+    }
+  }
+
+  function toggleAddOn(id: string) {
+    const exists = data.addOns.find((a) => a.id === id)
     update({
-      extras: data.extras.includes(label)
-        ? data.extras.filter(e => e !== label)
-        : [...data.extras, label],
+      addOns: exists ? data.addOns.filter((a) => a.id !== id) : [...data.addOns, { id, qty: 1 }],
     })
   }
+
+  function setAddOnQty(id: string, qty: number) {
+    update({ addOns: data.addOns.map((a) => (a.id === id ? { ...a, qty } : a)) })
+  }
+
+  const publicAddOns = ADD_ONS.filter((a) => PUBLIC_ADD_ON_IDS.has(a.id))
+  const addOnCategories = Array.from(new Set(publicAddOns.map((a) => a.category)))
+
   return (
-    <div className="flex gap-6 items-start">
-    <div className="flex flex-col gap-8 flex-1">
+    <div className="flex flex-col gap-8">
       <div>
         <Label>Property size</Label>
+        <div className="mb-3">
+          <input
+            type="number"
+            inputMode="numeric"
+            value={data.sqftInput}
+            onChange={(e) => handleSqftChange(e.target.value)}
+            placeholder="Enter square footage (optional) to auto-select"
+            className={`${inputCls} max-w-xs`}
+          />
+        </div>
         <div className="flex flex-col gap-2">
-          {PROPERTY_SIZES.map(({ label, sqft }) => {
-            const price = data.serviceType ? PRICING[label][data.serviceType] : null
-            return (
-              <button
-                key={label}
-                type="button"
-                onClick={() => update({ propertySize: label })}
-                className={[
-                  'text-left px-5 py-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between',
-                  data.propertySize === label
-                    ? 'border-dark-brown bg-dark-brown/5'
-                    : 'border-dark-brown/15 hover:border-dark-brown/35',
-                ].join(' ')}
-              >
-                <span className="font-marcellus text-sm">{label}</span>
-                <span className="font-marcellus text-sm opacity-40">
-                  {sqft}{price ? ` · $${price.toLocaleString()}` : ''}
-                </span>
-              </button>
-            )
-          })}
+          {sizeOptions.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => update({ sizeKey: opt.key })}
+              className={[
+                'text-left px-5 py-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between',
+                data.sizeKey === opt.key ? 'border-dark-brown bg-dark-brown/5' : 'border-dark-brown/15 hover:border-dark-brown/35',
+              ].join(' ')}
+            >
+              <span className="font-marcellus text-sm">{opt.label}</span>
+              <span className="font-marcellus text-sm opacity-40">
+                {opt.price !== null ? `$${opt.price.toLocaleString()}` : 'Custom quote'}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
       <div>
         <Label>Add-ons (optional)</Label>
-        <div className="flex flex-col gap-2">
-          {EXTRA_OPTIONS.map(({ label, price, note }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => toggleExtra(label)}
-              className={[
-                'text-left px-5 py-3 rounded-xl border font-marcellus text-sm transition-all duration-150 cursor-pointer flex items-center justify-between gap-4',
-                data.extras.includes(label)
-                  ? 'border-dark-brown bg-dark-brown/5'
-                  : 'border-dark-brown/15 hover:border-dark-brown/35',
-              ].join(' ')}
-            >
-              <span>{label} <span className="opacity-40 text-xs">— {note}</span></span>
-              <span className="opacity-50 flex-shrink-0">{price}</span>
-            </button>
+        <div className="flex flex-col gap-4">
+          {addOnCategories.map((cat) => (
+            <div key={cat}>
+              <p className="font-marcellus text-xs opacity-35 uppercase tracking-wider mb-2">{cat}</p>
+              <div className="flex flex-col gap-2">
+                {publicAddOns.filter((a) => a.category === cat).map((addOn) => (
+                  <AddOnRow
+                    key={addOn.id}
+                    addOn={addOn}
+                    selected={data.addOns.find((a) => a.id === addOn.id)}
+                    onToggle={() => toggleAddOn(addOn.id)}
+                    onQtyChange={(qty) => setAddOnQty(addOn.id, qty)}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
-    </div>
-    <AnimatePresence mode="wait">
-      {data.serviceType && (
-        <div className="hidden md:block w-[240px] flex-shrink-0 sticky top-4">
-          <AtAGlanceSidebar key={data.serviceType} type={data.serviceType} />
-        </div>
-      )}
-    </AnimatePresence>
     </div>
   )
 }
 
 function Step3({ data, update }: { data: FormData; update: (p: Partial<FormData>) => void }) {
-  const today  = new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().split('T')[0]
   const times: TimeWindow[] = ['Morning (8am–12pm)', 'Afternoon (12pm–4pm)', 'Flexible']
-  const freqs: Frequency[]  = ['One-time', 'Weekly', 'Bi-weekly', 'Monthly']
+  const freqs: Frequency[] = ['One-time', 'Weekly', 'Bi-weekly', 'Monthly']
+  const surcharges = applySurcharges({ emergencySameDay: data.emergencySameDay, serviceDate: data.date })
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -359,14 +412,14 @@ function Step3({ data, update }: { data: FormData; update: (p: Partial<FormData>
           type="date"
           value={data.date}
           min={today}
-          onChange={e => update({ date: e.target.value })}
+          onChange={(e) => update({ date: e.target.value })}
           className="font-marcellus text-base bg-transparent border-b border-dark-brown/25 pb-2 w-44 focus:outline-none focus:border-dark-brown transition-colors"
         />
       </div>
       <div>
         <Label>Arrival window</Label>
         <div className="flex flex-wrap gap-3">
-          {times.map(t => (
+          {times.map((t) => (
             <button
               key={t} type="button"
               onClick={() => update({ timeWindow: t })}
@@ -379,20 +432,43 @@ function Step3({ data, update }: { data: FormData; update: (p: Partial<FormData>
         </div>
       </div>
       <div>
-        <Label>Frequency</Label>
-        <div className="flex flex-wrap gap-3">
-          {freqs.map(f => (
-            <button
-              key={f} type="button"
-              onClick={() => update({ frequency: f })}
-              className={[
-                'px-5 py-2.5 rounded-full border font-marcellus text-sm transition-all duration-150 cursor-pointer',
-                data.frequency === f ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/20 hover:border-dark-brown/50',
-              ].join(' ')}
-            >{f}</button>
+        <label className="flex items-center gap-3 cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={data.emergencySameDay}
+            onChange={(e) => update({ emergencySameDay: e.target.checked })}
+            className="w-4 h-4"
+          />
+          <span className="font-marcellus text-sm">I need this today (+$50 emergency call-out)</span>
+        </label>
+      </div>
+      {data.category === 'str' && (
+        <div>
+          <Label>Frequency</Label>
+          <div className="flex flex-wrap gap-3">
+            {freqs.map((f) => (
+              <button
+                key={f} type="button"
+                onClick={() => update({ frequency: f })}
+                className={[
+                  'px-5 py-2.5 rounded-full border font-marcellus text-sm transition-all duration-150 cursor-pointer',
+                  data.frequency === f ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/20 hover:border-dark-brown/50',
+                ].join(' ')}
+              >{f}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      {data.category === 'residential' && (
+        <p className="font-marcellus text-sm opacity-40">Frequency: {data.frequency} (set in Step 1)</p>
+      )}
+      {surcharges.breakdown.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {surcharges.breakdown.map((s) => (
+            <p key={s.label} className="font-marcellus text-xs opacity-50">+ ${s.amount} {s.label}</p>
           ))}
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -412,6 +488,9 @@ function Step4({ data, update }: { data: FormData; update: (p: Partial<FormData>
 }
 
 function Step5({ data, update }: { data: FormData; update: (p: Partial<FormData>) => void }) {
+  const cardSaved = !!data.stripePaymentMethodId
+  const validContact = !!data.firstName.trim() && !!data.lastName.trim() && !!data.email.trim() && !!data.phone.trim()
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-5">
@@ -420,6 +499,30 @@ function Step5({ data, update }: { data: FormData; update: (p: Partial<FormData>
       </div>
       <input type="email" value={data.email} onChange={e => update({ email: e.target.value })} placeholder="Email address" className={inputCls} />
       <input type="tel" value={data.phone} onChange={e => update({ phone: e.target.value })} placeholder="Phone number" className={inputCls} />
+
+      {validContact && !cardSaved && (
+        <div>
+          <Label>Save a card (optional)</Label>
+          <p className="font-marcellus text-xs opacity-40 mb-3">
+            Saving a card lets us bill add-ons or upcharges after the job without contacting you again. You can skip this.
+          </p>
+          <BookingCardCapture
+            email={data.email}
+            firstName={data.firstName}
+            lastName={data.lastName}
+            phone={data.phone}
+            onSaved={(r: CardCaptureResult) => update({
+              stripeCustomerId: r.stripeCustomerId,
+              stripePaymentMethodId: r.stripePaymentMethodId,
+              customerId: r.customerId,
+            })}
+            onSkip={() => update({ stripePaymentMethodId: 'skipped' })}
+          />
+        </div>
+      )}
+      {cardSaved && data.stripePaymentMethodId !== 'skipped' && (
+        <p className="font-marcellus text-sm opacity-50">Card saved.</p>
+      )}
     </div>
   )
 }
@@ -427,33 +530,43 @@ function Step5({ data, update }: { data: FormData; update: (p: Partial<FormData>
 function Step6({ data, update, onSubmit, submitting }: {
   data: FormData; update: (p: Partial<FormData>) => void; onSubmit: () => void; submitting: boolean
 }) {
-  const base  = data.serviceType && data.propertySize
-    ? (isStartUp(data.serviceType) ? STARTUP_FLAT[data.propertySize] : PRICING[data.propertySize][data.serviceType])
-    : 0
-  const total = calcTotal(data)
+  const { primaryLabel, primary, secondaryLabel, secondary } = getEstimates(data)
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-dark-brown/12 px-6 py-5 flex flex-col gap-3">
         <div className="flex justify-between font-marcellus text-sm opacity-50">
-          <span>{data.serviceType} — {data.propertySize}</span>
-          <span>${base.toLocaleString()}</span>
+          <span>{primaryLabel} — {primary.sizeLabel}</span>
+          <EstimateLine result={primary} />
         </div>
-        {data.extras.map(label => {
-          const opt = EXTRA_OPTIONS.find(o => o.label === label)
+        {secondary && (
+          <div className="flex justify-between font-marcellus text-sm opacity-50">
+            <span>{secondaryLabel}</span>
+            <EstimateLine result={secondary} />
+          </div>
+        )}
+        {data.addOns.map((sel) => {
+          const opt = ADD_ONS.find((o) => o.id === sel.id)
+          if (!opt) return null
           return (
-            <div key={label} className="flex justify-between font-marcellus text-sm opacity-50">
-              <span>{label}</span>
-              <span>{opt?.price}</span>
+            <div key={sel.id} className="flex justify-between font-marcellus text-sm opacity-50">
+              <span>{opt.name}{opt.qtyRange ? ` × ${sel.qty}` : ''}</span>
+              <span>${(opt.price * (opt.qtyRange ? sel.qty : 1)).toLocaleString()}</span>
             </div>
           )
         })}
+        {primary.surchargeBreakdown.map((s) => (
+          <div key={s.label} className="flex justify-between font-marcellus text-sm opacity-50">
+            <span>{s.label}</span>
+            <span>+${s.amount}</span>
+          </div>
+        ))}
         <div className="border-t border-dark-brown/12 pt-3 flex justify-between font-marcellus text-base">
           <span>Estimated total</span>
-          <span>${total.toLocaleString()}</span>
+          <EstimateLine result={primary} />
         </div>
         <p className="font-marcellus text-xs opacity-35">
-          Final price confirmed after property review. Ozone/window add-ons quoted by unit count.
+          Final price confirmed after property review. Prices shown are a ±10% estimate.
         </p>
       </div>
 
@@ -544,102 +657,73 @@ function SummaryRow({
 }
 
 function BookingSummary({ data }: { data: FormData }) {
-  const hasService = !!data.serviceType
-  const hasSize    = !!data.propertySize
-  const base       = hasService && hasSize
-    ? (isStartUp(data.serviceType as ServiceType)
-        ? STARTUP_FLAT[data.propertySize as PropertySize]
-        : PRICING[data.propertySize as PropertySize][data.serviceType as ServiceType])
-    : null
-  const extrasTotal = data.extras.reduce((sum, label) => {
-    const opt = EXTRA_OPTIONS.find(o => o.label === label)
-    if (!opt) return sum
-    const n = parseInt(opt.price.replace(/[^0-9]/g, ''))
-    return sum + (isNaN(n) ? 0 : n)
-  }, 0)
-  const total = (base ?? 0) + extrasTotal
+  const { primaryLabel, primary, secondaryLabel, secondary } = getEstimates(data)
+  const hasService = data.category === 'residential' ? !!data.frequency : !!data.serviceKey
+  const hasSize = !!data.sizeKey
 
-  const sizeInfo   = PROPERTY_SIZES.find(s => s.label === data.propertySize)
-  const dateLabel  = data.date
+  const dateLabel = data.date
     ? new Date(data.date + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null
 
   return (
     <div className="sticky top-8 rounded-2xl border border-dark-brown/12 overflow-hidden bg-stone">
 
-      {/* Title */}
       <div className="border-b border-dark-brown/10 px-6 py-4">
         <p className="font-marcellus text-xs uppercase tracking-[0.2em] opacity-50 text-center">Booking Summary</p>
       </div>
 
-      {/* Rows */}
       <div className="px-6 py-5 flex flex-col gap-5">
-
-        {/* Service + property */}
         <SummaryRow
           icon="service"
-          label={data.serviceType || undefined}
-          value={base !== null ? `$${base.toLocaleString()}` : (hasService ? '' : null)}
+          label={hasService ? primaryLabel : undefined}
+          value={hasService && !primary.contactForQuote ? (primary.range ? `${formatMoney(primary.range.low)}–${formatMoney(primary.range.high)}` : formatMoney(primary.subtotal)) : (hasService ? '' : null)}
           placeholder="Choose a service…"
-          sub={hasSize ? [
-            { label: data.propertySize as string, value: sizeInfo?.sqft ?? '' },
-          ] : undefined}
+          sub={hasSize ? [{ label: primary.sizeLabel ?? '', value: '' }] : undefined}
         />
 
-        {/* Add-ons */}
+        {secondary && (
+          <SummaryRow
+            icon="frequency"
+            label={secondaryLabel}
+            value={!secondary.contactForQuote ? (secondary.range ? `${formatMoney(secondary.range.low)}–${formatMoney(secondary.range.high)}/mo` : `${formatMoney(secondary.subtotal)}/mo`) : ''}
+          />
+        )}
+
         <AnimatePresence>
-          {data.extras.map(label => {
-            const opt = EXTRA_OPTIONS.find(o => o.label === label)
+          {data.addOns.map((sel) => {
+            const opt = ADD_ONS.find((o) => o.id === sel.id)
+            if (!opt) return null
             return (
               <motion.div
-                key={label}
+                key={sel.id}
                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.25 }}
                 className="overflow-hidden"
               >
-                <SummaryRow icon="addon" label={label} value={opt?.price ?? ''} />
+                <SummaryRow icon="addon" label={opt.name} value={`$${(opt.price * (opt.qtyRange ? sel.qty : 1)).toLocaleString()}`} />
               </motion.div>
             )
           })}
         </AnimatePresence>
 
-        {/* Date */}
         <SummaryRow
           icon="date"
           value={dateLabel ? `${dateLabel}${data.timeWindow ? ' · ' + data.timeWindow : ''}` : null}
           placeholder="Choose service date…"
         />
-
-        {/* Frequency */}
-        <SummaryRow
-          icon="frequency"
-          value={data.frequency || null}
-          placeholder="Choose frequency…"
-        />
       </div>
 
-      {/* Total */}
       <div className="border-t border-dark-brown/10 px-6 py-5 flex flex-col gap-1">
-        <div className="flex justify-between items-baseline font-marcellus text-sm opacity-60">
-          <span>Estimated price</span>
-          <span>{base !== null ? `$${base.toLocaleString()}` : '—'}</span>
-        </div>
-        {extrasTotal > 0 && (
-          <div className="flex justify-between items-baseline font-marcellus text-sm opacity-60">
-            <span>Add-ons</span>
-            <span>+${extrasTotal.toLocaleString()}</span>
-          </div>
-        )}
-        <div className="flex justify-between items-baseline mt-2">
-          <span className="font-marcellus text-sm">Total</span>
+        <div className="flex justify-between items-baseline mt-1">
+          <span className="font-marcellus text-sm">Estimated total</span>
           <AnimatePresence mode="wait">
             <motion.span
-              key={total}
+              key={`${primary.subtotal}-${primary.contactForQuote}`}
               initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.2 }}
-              className={['font-marcellus', total > 0 ? 'text-2xl' : 'text-base opacity-25'].join(' ')}
+              className={['font-marcellus', hasSize && !primary.contactForQuote ? 'text-2xl' : 'text-base opacity-25'].join(' ')}
             >
-              {total > 0 ? `$${total.toLocaleString()}` : '—'}
+              {primary.contactForQuote ? 'Custom quote' : hasSize ? (primary.range ? `${formatMoney(primary.range.low)}–${formatMoney(primary.range.high)}` : formatMoney(primary.subtotal)) : '—'}
             </motion.span>
           </AnimatePresence>
         </div>
@@ -654,16 +738,17 @@ function BookingSummary({ data }: { data: FormData }) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const EMPTY: FormData = {
-  serviceType: '', propertySize: '', extras: [],
-  date: '', timeWindow: '', frequency: '',
+  category: 'str', serviceKey: '', sizeKey: '', sqftInput: '', addOns: [],
+  date: '', timeWindow: '', frequency: '', emergencySameDay: false,
   address: '', unit: '', city: '', state: '', zip: '',
   firstName: '', lastName: '', email: '', phone: '', notes: '',
+  stripeCustomerId: '', stripePaymentMethodId: '', customerId: '',
 }
 
-export function BookingForm() {
+export function BookingForm({ initialCategory }: { initialCategory?: PropertyCategory }) {
   const [currentStep, setCurrentStep]  = useState(1)
   const [completedSteps, setCompleted] = useState<Set<number>>(new Set())
-  const [data, setData]                = useState<FormData>(EMPTY)
+  const [data, setData]                = useState<FormData>(() => ({ ...EMPTY, category: initialCategory ?? EMPTY.category }))
   const [submitting, setSubmitting]    = useState(false)
   const [submitted, setSubmitted]      = useState(false)
   const [error, setError]              = useState('')
@@ -680,7 +765,39 @@ export function BookingForm() {
   async function handleSubmit() {
     setSubmitting(true); setError('')
     try {
-      await submitBooking({ ...data, estimatedTotal: calcTotal(data) })
+      const { primary, secondary } = getEstimates(data)
+      const estimatedLow = secondary
+        ? (primary.range?.low ?? primary.subtotal) + (secondary.range?.low ?? secondary.subtotal)
+        : primary.range?.low ?? primary.subtotal
+      const estimatedHigh = secondary
+        ? (primary.range?.high ?? primary.subtotal) + (secondary.range?.high ?? secondary.subtotal)
+        : primary.range?.high ?? primary.subtotal
+
+      await submitBooking({
+        category: data.category,
+        serviceKey: data.category === 'residential' ? 'residential_recurring' : (data.serviceKey as string),
+        propertySize: data.sizeKey,
+        addOns: data.addOns,
+        date: data.date,
+        timeWindow: data.timeWindow,
+        frequency: data.frequency,
+        emergencySameDay: data.emergencySameDay,
+        address: data.address,
+        unit: data.unit,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        notes: data.notes,
+        estimatedLow,
+        estimatedHigh,
+        stripeCustomerId: data.stripeCustomerId || undefined,
+        stripePaymentMethodId: data.stripePaymentMethodId && data.stripePaymentMethodId !== 'skipped' ? data.stripePaymentMethodId : undefined,
+        customerId: data.customerId || undefined,
+      })
       setSubmitted(true)
     } catch {
       setError('Something went wrong. Please try again or call us directly.')

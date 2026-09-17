@@ -150,3 +150,7 @@ apps/mobile/ios
 amplify_outputs.json
 apps/web/amplify_outputs.json
 apps/mobile/amplify_outputs.json
+
+# Amplify local sandbox build artifacts (CDK synth output, resolver templates, lambda zips) —
+# regenerated on every `ampx sandbox` run, never meant to be committed.
+apps/web/.amplify/artifacts/

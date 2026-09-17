@@ -3,10 +3,15 @@ import { BookingForm } from '@/components/BookingForm'
 
 export const metadata = {
   title: 'Book Now — STR Cleaning Crew',
-  description: 'Get an instant quote and book your STR cleaning service.',
+  description: 'Get an instant quote and book your STR or residential cleaning service.',
 }
 
-export default function BookPage() {
+export default async function BookPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string }>
+}) {
+  const { mode } = await searchParams
   return (
     <div className="min-h-screen flex flex-col bg-stone text-dark-brown">
       <div className="[&_a]:text-dark-brown [&_a]:opacity-70 [&_a:hover]:opacity-100 [&_button]:text-dark-brown">
@@ -19,9 +24,9 @@ export default function BookPage() {
             Get a Quote
           </h1>
           <p className="font-marcellus text-base opacity-50 mb-14 animate-rise-delay-1">
-            Tailored STR cleaning for your property.
+            Tailored STR and residential cleaning for your property.
           </p>
-          <BookingForm />
+          <BookingForm initialCategory={mode === 'residential' ? 'residential' : undefined} />
         </div>
       </main>
     </div>
