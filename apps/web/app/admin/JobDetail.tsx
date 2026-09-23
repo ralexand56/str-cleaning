@@ -6,10 +6,13 @@ import { updateJobStatus, type JobStatusValue } from '@/app/actions/admin/update
 import { assignJob } from '@/app/actions/admin/assignJob'
 import { addJobNote, listJobNotes } from '@/app/actions/admin/addJobNote'
 import { sendAdminMessageToCustomer, sendAdminMessageToWorker, listJobMessages } from '@/app/actions/admin/sendAdminMessage'
+import { listCustomerCharges } from '@/app/actions/admin/listCharges'
 import { MessageThread, type ThreadMessage } from '@/components/jobs/MessageThread'
 import { AddNoteForm, type JobNoteItem } from '@/components/jobs/AddNoteForm'
 import { humanize } from '@/lib/format'
 import { ChargeCustomerModal } from './ChargeCustomerModal'
+
+type Charge = Schema['Charge']['type']
 
 type Job = Schema['Job']['type']
 type Worker = Schema['Worker']['type']
@@ -27,11 +30,18 @@ export function JobDetail({ job, workers, onChanged }: {
   const [scheduledDate, setScheduledDate] = useState(job.scheduledDate ?? '')
   const [scheduledTimeWindow, setScheduledTimeWindow] = useState(job.scheduledTimeWindow ?? '')
   const [showCharge, setShowCharge] = useState(false)
+  const [charges, setCharges] = useState<Charge[]>([])
+
+  function refreshCharges() {
+    if (job.customerId) listCustomerCharges(job.customerId).then(setCharges)
+  }
 
   useEffect(() => {
     listJobMessages(job.id).then((m) => setMessages(m.map((x) => ({ id: x.id, senderType: x.senderType as ThreadMessage['senderType'], body: x.body, createdAt: x.createdAt, toEmail: x.toEmail }))))
     listJobNotes(job.id).then((n) => setNotes(n.map((x) => ({ id: x.id, authorRole: x.authorRole, body: x.body, createdAt: x.createdAt }))))
-  }, [job.id])
+    refreshCharges()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job.id, job.customerId])
 
   // Message has no explicit "audience" field: a customer-directed admin message carries toEmail,
   // a worker-directed one doesn't. Customer replies are senderType CUSTOMER; workers post as WORKER.
@@ -126,13 +136,36 @@ export function JobDetail({ job, workers, onChanged }: {
       </div>
 
       <div>
+        <p className="font-marcellus text-xs opacity-40 uppercase tracking-wider mb-2">Charge history</p>
+        {charges.length === 0 && <p className="font-marcellus text-sm opacity-35">No charges yet.</p>}
+        <div className="flex flex-col gap-2 mb-3">
+          {charges.map((c) => (
+            <div key={c.id} className="flex justify-between items-baseline px-4 py-2.5 rounded-lg border border-dark-brown/12 font-marcellus text-sm">
+              <div>
+                <span>{c.description || 'Charge'}</span>
+                {c.jobId !== job.id && <span className="opacity-35 text-xs ml-2">(other job)</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="opacity-50 text-xs">{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''}</span>
+                <span className={c.status === 'SUCCEEDED' ? 'text-green-700' : c.status === 'FAILED' ? 'text-red-600' : 'opacity-60'}>
+                  ${(c.amountCents / 100).toFixed(2)} · {humanize(c.status)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
         <button type="button" onClick={() => setShowCharge(true)} className="px-6 py-3 rounded-full border border-dark-brown/30 font-marcellus text-sm cursor-pointer">
           Charge customer
         </button>
       </div>
 
       {showCharge && job.customerId && (
-        <ChargeCustomerModal jobId={job.id} customerId={job.customerId} onClose={() => setShowCharge(false)} />
+        <ChargeCustomerModal
+          jobId={job.id}
+          customerId={job.customerId}
+          onClose={() => setShowCharge(false)}
+          onCharged={refreshCharges}
+        />
       )}
     </div>
   )

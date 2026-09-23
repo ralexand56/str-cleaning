@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { chargeCustomer } from '@/app/actions/stripe/chargeCustomer'
 
-export function ChargeCustomerModal({ jobId, customerId, onClose }: {
+export function ChargeCustomerModal({ jobId, customerId, onClose, onCharged }: {
   jobId?: string
   customerId: string
   onClose: () => void
+  onCharged?: () => void
 }) {
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
@@ -26,6 +27,7 @@ export function ChargeCustomerModal({ jobId, customerId, onClose }: {
         description: description || 'Additional charge',
       })
       setResult({ status: res.status, message: res.message })
+      onCharged?.()
     } catch (err) {
       setResult({ status: 'failed', message: err instanceof Error ? err.message : 'Charge failed' })
     } finally {
