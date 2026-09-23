@@ -49,7 +49,7 @@ const schema = a.schema({
       email: a.string().required(),
       phone: a.string(),
       active: a.boolean().default(true),
-      jobs: a.hasMany('Job', 'assignedWorkerId'),
+      assignments: a.hasMany('JobAssignment', 'workerId'),
     })
     .authorization((allow) => [allow.group('Admins'), allow.ownerDefinedIn('cognitoSub').to(['read'])])
     .secondaryIndexes((idx) => [idx('cognitoSub')]),
@@ -93,23 +93,40 @@ const schema = a.schema({
       notes: a.string(), // customer's own free-text notes at booking time
       rawMessage: a.string(), // CONTACT_INQUIRY message body
 
-      assignedWorkerId: a.id(),
-      assignedWorker: a.belongsTo('Worker', 'assignedWorkerId'),
-      assignedWorkerSub: a.string(), // denormalized Cognito sub, drives owner-based auth for workers
+      assignments: a.hasMany('JobAssignment', 'jobId'),
 
       messages: a.hasMany('Message', 'jobId'),
       notesLog: a.hasMany('JobNote', 'jobId'),
       charges: a.hasMany('Charge', 'jobId'),
     })
     // publicApiKey 'read' (server-only) backs the customer account page listing a customer's own
-    // jobs by customerId — scoped in application code, not by the data layer, same tradeoff as
-    // Message/JobNote above.
+    // jobs by customerId. Workers get blanket group read (not row-scoped — a worker's own
+    // JobAssignment rows, which ARE row-scoped, are what the app uses to decide which Jobs are
+    // "theirs"; see JobAssignment below and app/actions/worker/myJobs.ts). Same tradeoff as
+    // Message/JobNote elsewhere in this schema.
     .authorization((allow) => [
       allow.group('Admins'),
-      allow.ownerDefinedIn('assignedWorkerSub').to(['read', 'update']),
+      allow.group('Workers').to(['read']),
       allow.publicApiKey().to(['create', 'read']),
     ])
-    .secondaryIndexes((idx) => [idx('assignedWorkerId'), idx('status'), idx('customerId')]),
+    .secondaryIndexes((idx) => [idx('status'), idx('customerId')]),
+
+  // Join table for the Job <-> Worker many-to-many relationship (a job can need several workers;
+  // a worker can be on several jobs). Amplify Gen2 Data has no built-in many-to-many helper in the
+  // installed version, so this is modeled explicitly.
+  JobAssignment: a
+    .model({
+      jobId: a.id().required(),
+      job: a.belongsTo('Job', 'jobId'),
+      workerId: a.id().required(),
+      worker: a.belongsTo('Worker', 'workerId'),
+      workerSub: a.string().required(), // denormalized from Worker.cognitoSub, drives owner-based auth
+    })
+    .authorization((allow) => [
+      allow.group('Admins'),
+      allow.ownerDefinedIn('workerSub').to(['read']),
+    ])
+    .secondaryIndexes((idx) => [idx('jobId'), idx('workerId')]),
 
   Message: a
     .model({
@@ -123,8 +140,8 @@ const schema = a.schema({
     })
     // Workers get blanket read/create (not scoped per-job — Amplify can't express "readable by
     // whoever is assigned to the parent Job" declaratively without a custom resolver). The app
-    // layer scopes access: a worker's UI only ever queries messages for jobs their own Job.get
-    // (which *is* correctly row-scoped via assignedWorkerSub) confirms they're assigned to.
+    // layer scopes access: a worker's UI only ever queries messages for a job after confirming
+    // (via their own row-scoped JobAssignment rows) that they're actually assigned to it.
     .authorization((allow) => [
       allow.group('Admins'),
       allow.group('Workers').to(['read', 'create']),

@@ -298,11 +298,11 @@
               "isRequired": false,
               "attributes": []
             },
-            "jobs": {
-              "name": "jobs",
+            "assignments": {
+              "name": "assignments",
               "isArray": true,
               "type": {
-                "model": "Job"
+                "model": "JobAssignment"
               },
               "isRequired": false,
               "attributes": [],
@@ -310,7 +310,7 @@
               "association": {
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
-                  "assignedWorkerId"
+                  "workerId"
                 ]
               }
             },
@@ -621,34 +621,21 @@
               "isRequired": false,
               "attributes": []
             },
-            "assignedWorkerId": {
-              "name": "assignedWorkerId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
-            "assignedWorker": {
-              "name": "assignedWorker",
-              "isArray": false,
+            "assignments": {
+              "name": "assignments",
+              "isArray": true,
               "type": {
-                "model": "Worker"
+                "model": "JobAssignment"
               },
               "isRequired": false,
               "attributes": [],
+              "isArrayNullable": true,
               "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "assignedWorkerId"
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "jobId"
                 ]
               }
-            },
-            "assignedWorkerSub": {
-              "name": "assignedWorkerSub",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
             },
             "messages": {
               "name": "messages",
@@ -743,12 +730,154 @@
               }
             },
             {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "Admins"
+                    ],
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "operations": [
+                      "read"
+                    ],
+                    "groups": [
+                      "Workers"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        },
+        "JobAssignment": {
+          "name": "JobAssignment",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "jobId": {
+              "name": "jobId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "job": {
+              "name": "job",
+              "isArray": false,
+              "type": {
+                "model": "Job"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "jobId"
+                ]
+              }
+            },
+            "workerId": {
+              "name": "workerId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "worker": {
+              "name": "worker",
+              "isArray": false,
+              "type": {
+                "model": "Worker"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "workerId"
+                ]
+              }
+            },
+            "workerSub": {
+              "name": "workerSub",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "JobAssignments",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
               "type": "key",
               "properties": {
-                "name": "jobsByAssignedWorkerId",
-                "queryField": "listJobByAssignedWorkerId",
+                "name": "jobAssignmentsByJobId",
+                "queryField": "listJobAssignmentByJobId",
                 "fields": [
-                  "assignedWorkerId"
+                  "jobId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "jobAssignmentsByWorkerId",
+                "queryField": "listJobAssignmentByWorkerId",
+                "fields": [
+                  "workerId"
                 ]
               }
             },
@@ -772,21 +901,12 @@
                   },
                   {
                     "provider": "userPools",
-                    "ownerField": "assignedWorkerSub",
+                    "ownerField": "workerSub",
                     "allow": "owner",
                     "operations": [
-                      "read",
-                      "update"
+                      "read"
                     ],
                     "identityClaim": "cognito:username"
-                  },
-                  {
-                    "allow": "public",
-                    "provider": "apiKey",
-                    "operations": [
-                      "create",
-                      "read"
-                    ]
                   }
                 ]
               }

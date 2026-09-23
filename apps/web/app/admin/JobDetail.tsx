@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { Schema } from '@/amplify/data/resource'
 import { updateJobStatus, type JobStatusValue } from '@/app/actions/admin/updateJobStatus'
-import { assignJob } from '@/app/actions/admin/assignJob'
+import { assignWorkerToJob, unassignWorkerFromJob, listJobAssignments } from '@/app/actions/admin/assignJob'
 import { addJobNote, listJobNotes } from '@/app/actions/admin/addJobNote'
 import { sendAdminMessageToCustomer, sendAdminMessageToWorker, listJobMessages } from '@/app/actions/admin/sendAdminMessage'
 import { listCustomerCharges } from '@/app/actions/admin/listCharges'
@@ -13,6 +13,7 @@ import { humanize } from '@/lib/format'
 import { ChargeCustomerModal } from './ChargeCustomerModal'
 
 type Charge = Schema['Charge']['type']
+type JobAssignment = Schema['JobAssignment']['type']
 
 type Job = Schema['Job']['type']
 type Worker = Schema['Worker']['type']
@@ -26,7 +27,8 @@ export function JobDetail({ job, workers, onChanged }: {
 }) {
   const [messages, setMessages] = useState<ThreadMessage[]>([])
   const [notes, setNotes] = useState<JobNoteItem[]>([])
-  const [workerId, setWorkerId] = useState(job.assignedWorkerId ?? '')
+  const [assignments, setAssignments] = useState<JobAssignment[]>([])
+  const [workerId, setWorkerId] = useState('')
   const [scheduledDate, setScheduledDate] = useState(job.scheduledDate ?? '')
   const [scheduledTimeWindow, setScheduledTimeWindow] = useState(job.scheduledTimeWindow ?? '')
   const [showCharge, setShowCharge] = useState(false)
@@ -36,10 +38,15 @@ export function JobDetail({ job, workers, onChanged }: {
     if (job.customerId) listCustomerCharges(job.customerId).then(setCharges)
   }
 
+  function refreshAssignments() {
+    listJobAssignments(job.id).then(setAssignments)
+  }
+
   useEffect(() => {
     listJobMessages(job.id).then((m) => setMessages(m.map((x) => ({ id: x.id, senderType: x.senderType as ThreadMessage['senderType'], body: x.body, createdAt: x.createdAt, toEmail: x.toEmail }))))
     listJobNotes(job.id).then((n) => setNotes(n.map((x) => ({ id: x.id, authorRole: x.authorRole, body: x.body, createdAt: x.createdAt }))))
     refreshCharges()
+    refreshAssignments()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.id, job.customerId])
 
@@ -55,8 +62,15 @@ export function JobDetail({ job, workers, onChanged }: {
 
   async function handleAssign() {
     if (!workerId) return
-    await assignJob({ jobId: job.id, workerId, scheduledDate, scheduledTimeWindow })
+    await assignWorkerToJob({ jobId: job.id, workerId, scheduledDate, scheduledTimeWindow })
+    setWorkerId('')
+    refreshAssignments()
     onChanged()
+  }
+
+  async function handleUnassign(assignmentId: string) {
+    await unassignWorkerFromJob(assignmentId)
+    refreshAssignments()
   }
 
   async function handleSendToCustomer(body: string) {
@@ -107,15 +121,37 @@ export function JobDetail({ job, workers, onChanged }: {
 
       <div>
         <p className="font-marcellus text-xs opacity-40 uppercase tracking-wider mb-2">Assign & schedule</p>
+
+        {assignments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {assignments.map((a) => {
+              const w = workers.find((x) => x.id === a.workerId)
+              return (
+                <span key={a.id} className="flex items-center gap-2 px-4 py-2 rounded-full border border-dark-brown/20 font-marcellus text-xs">
+                  {w ? `${w.firstName} ${w.lastName}` : 'Worker'}
+                  <button
+                    type="button"
+                    onClick={() => handleUnassign(a.id)}
+                    className="opacity-50 hover:opacity-100 cursor-pointer bg-transparent border-none p-0 font-marcellus"
+                    aria-label={`Remove ${w ? `${w.firstName} ${w.lastName}` : 'worker'}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              )
+            })}
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-3 items-end">
           <select value={workerId} onChange={(e) => setWorkerId(e.target.value)} className="font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2">
-            <option value="">Choose a worker…</option>
-            {workers.map((w) => <option key={w.id} value={w.id}>{w.firstName} {w.lastName}</option>)}
+            <option value="">Add a worker…</option>
+            {workers.filter((w) => !assignments.some((a) => a.workerId === w.id)).map((w) => <option key={w.id} value={w.id}>{w.firstName} {w.lastName}</option>)}
           </select>
           <input type="date" value={scheduledDate ?? ''} onChange={(e) => setScheduledDate(e.target.value)} className="font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2" />
           <input type="text" value={scheduledTimeWindow ?? ''} onChange={(e) => setScheduledTimeWindow(e.target.value)} placeholder="Time window" className="font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2 w-40" />
           <button type="button" onClick={handleAssign} disabled={!workerId} className="px-5 py-2 rounded-full bg-dark-brown text-stone font-marcellus text-sm disabled:opacity-50 cursor-pointer">
-            Assign
+            Add worker
           </button>
         </div>
       </div>
