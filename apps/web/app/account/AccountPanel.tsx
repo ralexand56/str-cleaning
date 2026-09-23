@@ -69,9 +69,12 @@ export function AccountPanel({ jobs, charges, hasCustomer }: {
             <p className="font-marcellus text-xs opacity-40 uppercase tracking-wider mb-2">Charges</p>
             <div className="flex flex-col gap-2">
               {charges.map((c) => (
-                <div key={c.id} className="flex justify-between px-4 py-2 rounded-lg border border-dark-brown/10 font-marcellus text-xs">
-                  <span>{c.description ?? 'Charge'}</span>
-                  <span className="opacity-60">${(c.amountCents / 100).toFixed(2)} · {humanize(c.status)}</span>
+                <div key={c.id} className="flex flex-col gap-0.5 px-4 py-2.5 rounded-lg border border-dark-brown/10 font-marcellus text-xs">
+                  <div className="flex justify-between">
+                    <span>{c.description ?? 'Charge'}</span>
+                    <span className="opacity-60">${(c.amountCents / 100).toFixed(2)} · {humanize(c.status)}</span>
+                  </div>
+                  {c.createdAt && <span className="opacity-35">{new Date(c.createdAt).toLocaleDateString()}</span>}
                 </div>
               ))}
             </div>
