@@ -41,10 +41,12 @@
         "GOOGLE"
       ],
       "redirect_sign_in_uri": [
-        "http://localhost:3000/sign-in"
+        "http://localhost:3000/sign-in",
+        "https://str-cleaning-web.vercel.app/sign-in"
       ],
       "redirect_sign_out_uri": [
-        "http://localhost:3000/sign-in"
+        "http://localhost:3000/sign-in",
+        "https://str-cleaning-web.vercel.app/sign-in"
       ],
       "response_type": "code",
       "scopes": [

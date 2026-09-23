@@ -19,8 +19,8 @@ export const auth = defineAuth({
       },
       // Redirect back to /sign-in (not '/') so the role-based redirect logic there
       // (Admins -> /admin, Workers -> /worker, else '/') also runs for the Google flow.
-      callbackUrls: ['http://localhost:3000/sign-in'],
-      logoutUrls: ['http://localhost:3000/sign-in'],
+      callbackUrls: ['http://localhost:3000/sign-in', 'https://str-cleaning-web.vercel.app/sign-in'],
+      logoutUrls: ['http://localhost:3000/sign-in', 'https://str-cleaning-web.vercel.app/sign-in'],
     },
   },
   userAttributes: {
