@@ -21,24 +21,21 @@ export interface StrSize {
   standardPlan: number
   premiumPlan: number
   seasonal: number
-  longStay: number
-  /** The long-stay price for this size is itself a proposal (on top of long-stay being proposed). */
-  longStayProposed?: boolean
   startup: number
 }
 
 export const STR_SIZES: StrSize[] = [
-  { key: 'studio', label: 'Studio / 1 bed 1 bath', sqft: 'up to 800 sq ft',    turnover: 175, extraTurnover: 160, standardPlan: 875,  premiumPlan: 1125, seasonal: 1095, longStay: 295, startup: 895 },
-  { key: '2b15b',  label: '2 bed 1.5 bath',        sqft: '800–1,200 sq ft',    turnover: 225, extraTurnover: 200, standardPlan: 1125, premiumPlan: 1425, seasonal: 1295, longStay: 425, startup: 895 },
-  { key: '2b2b',   label: '2 bed 2 bath',          sqft: '800–1,200 sq ft',    turnover: 240, extraTurnover: 215, standardPlan: 1200, premiumPlan: 1500, seasonal: 1495, longStay: 425, startup: 895 },
-  { key: '3b2b',   label: '3 bed 2 bath',          sqft: '1,200–1,500 sq ft',  turnover: 265, extraTurnover: 240, standardPlan: 1325, premiumPlan: 1625, seasonal: 1595, longStay: 545, startup: 895 },
-  { key: '3b25b',  label: '3 bed 2.5 bath',        sqft: '1,500–2,000 sq ft',  turnover: 315, extraTurnover: 285, standardPlan: 1575, premiumPlan: 1925, seasonal: 1795, longStay: 695, startup: 895 },
-  { key: '4b3b',   label: '4 bed 3 bath',          sqft: '2,000–2,500 sq ft',  turnover: 355, extraTurnover: 320, standardPlan: 1775, premiumPlan: 2175, seasonal: 2395, longStay: 695, startup: 1195 },
-  { key: '5b4b',   label: '5 bed 4 bath',          sqft: '2,500–3,000 sq ft',  turnover: 430, extraTurnover: 385, standardPlan: 2150, premiumPlan: 2600, seasonal: 3195, longStay: 895, startup: 1195 },
-  { key: '5b5b',   label: '5 bed 5+ bath',         sqft: '3,000+ sq ft',       turnover: 495, extraTurnover: 445, standardPlan: 2475, premiumPlan: 2975, seasonal: 3695, longStay: 995, longStayProposed: true, startup: 1195 },
+  { key: 'studio', label: 'Studio / 1 bed 1 bath', sqft: 'up to 800 sq ft',    turnover: 175, extraTurnover: 160, standardPlan: 875,  premiumPlan: 1125, seasonal: 1095, startup: 895 },
+  { key: '2b15b',  label: '2 bed 1.5 bath',        sqft: '800–1,200 sq ft',    turnover: 225, extraTurnover: 200, standardPlan: 1125, premiumPlan: 1425, seasonal: 1295, startup: 895 },
+  { key: '2b2b',   label: '2 bed 2 bath',          sqft: '800–1,200 sq ft',    turnover: 240, extraTurnover: 215, standardPlan: 1200, premiumPlan: 1500, seasonal: 1495, startup: 895 },
+  { key: '3b2b',   label: '3 bed 2 bath',          sqft: '1,200–1,500 sq ft',  turnover: 265, extraTurnover: 240, standardPlan: 1325, premiumPlan: 1625, seasonal: 1595, startup: 895 },
+  { key: '3b25b',  label: '3 bed 2.5 bath',        sqft: '1,500–2,000 sq ft',  turnover: 315, extraTurnover: 285, standardPlan: 1575, premiumPlan: 1925, seasonal: 1795, startup: 895 },
+  { key: '4b3b',   label: '4 bed 3 bath',          sqft: '2,000–2,500 sq ft',  turnover: 355, extraTurnover: 320, standardPlan: 1775, premiumPlan: 2175, seasonal: 2395, startup: 1195 },
+  { key: '5b4b',   label: '5 bed 4 bath',          sqft: '2,500–3,000 sq ft',  turnover: 430, extraTurnover: 385, standardPlan: 2150, premiumPlan: 2600, seasonal: 3195, startup: 1195 },
+  { key: '5b5b',   label: '5 bed 5+ bath',         sqft: '3,000+ sq ft',       turnover: 495, extraTurnover: 445, standardPlan: 2475, premiumPlan: 2975, seasonal: 3695, startup: 1195 },
 ]
 
-export type StrPackageKey = 'turnover' | 'plan_standard' | 'plan_premium' | 'long_stay' | 'seasonal' | 'startup'
+export type StrPackageKey = 'turnover' | 'plan_standard' | 'plan_premium' | 'seasonal' | 'startup'
 
 export interface StrPackage {
   key: StrPackageKey
@@ -46,7 +43,7 @@ export interface StrPackage {
   description: string
   monthly: boolean
   /** Which STR_SIZES column holds this package's price. */
-  priceField: 'turnover' | 'standardPlan' | 'premiumPlan' | 'longStay' | 'seasonal' | 'startup'
+  priceField: 'turnover' | 'standardPlan' | 'premiumPlan' | 'seasonal' | 'startup'
   proposed?: boolean
 }
 
@@ -57,8 +54,6 @@ export const STR_PACKAGES: StrPackage[] = [
     description: '5 turnovers a month included. Extra turnovers at the extra-turnover rate.' },
   { key: 'plan_premium',  label: 'Monthly plan: Premium Care', monthly: true,  priceField: 'premiumPlan',
     description: 'Standard plus same-day priority, maintenance issue reporting, an account manager and 1 seasonal deep clean a year.' },
-  { key: 'long_stay',     label: 'Long-stay turnover',         monthly: false, priceField: 'longStay', proposed: true,
-    description: 'After a stay of 7 nights or more. Bigger crew, deep reset of the kitchen, cookware and bathrooms.' },
   { key: 'seasonal',      label: 'Seasonal deep clean',        monthly: false, priceField: 'seasonal',
     description: 'Off-season full reset over 1–2 days: curtains, carpet, upholstery, inside cabinets and appliances.' },
   { key: 'startup',       label: 'STR start-up',               monthly: false, priceField: 'startup',
@@ -116,11 +111,11 @@ export interface FrequencyOption {
   proposed?: boolean
 }
 
-/** Discounts are from Tatiana's Nov 14 notes, still to confirm. */
+/** Recurring discounts, confirmed by Tatiana Nov 19 2026. */
 export const FREQUENCIES: FrequencyOption[] = [
-  { key: 'weekly',   label: 'Weekly',        discount: 0.2,  visitsPerMonth: 4.33, proposed: true },
-  { key: 'biweekly', label: 'Every 2 weeks', discount: 0.15, visitsPerMonth: 2.17, proposed: true },
-  { key: 'monthly',  label: 'Monthly',       discount: 0.05, visitsPerMonth: 1,    proposed: true },
+  { key: 'weekly',   label: 'Weekly',        discount: 0.2,  visitsPerMonth: 4.33 },
+  { key: 'biweekly', label: 'Every 2 weeks', discount: 0.15, visitsPerMonth: 2.17 },
+  { key: 'monthly',  label: 'Monthly',       discount: 0.05, visitsPerMonth: 1 },
 ]
 
 /** Square-foot bands for a booking platform (spec §6). The 0.09 × sq ft part, rounded up per band. */
@@ -151,11 +146,11 @@ export type PostConstructionItemKey = 'window_film' | 'window_regular' | 'sticke
 export const POST_CONSTRUCTION_ITEMS: { key: PostConstructionItemKey; label: string; price: number; unit: string; proposed?: boolean }[] = [
   { key: 'window_film',    label: 'Windows with film, glue or stickers', price: 40, unit: 'per window, removal included' },
   { key: 'window_regular', label: 'Windows, regular wash',               price: 25, unit: 'per window, inside and out' },
-  { key: 'stickers',       label: 'Cabinet doors or appliances with stickers', price: 3, unit: 'each', proposed: true },
+  { key: 'stickers',       label: 'Cabinet doors or appliances with stickers', price: 3, unit: 'each' },
   { key: 'fixtures',       label: 'High or outdoor light fixtures',      price: 25, unit: 'each' },
 ]
 
-export const POST_CONSTRUCTION_MINIMUM = { amount: 495, proposed: true }
+export const POST_CONSTRUCTION_MINIMUM = { amount: 495 }
 
 // ─── Add-ons (STR and residential) ───────────────────────────────────────────
 
@@ -194,7 +189,7 @@ export const ADD_ONS: AddOn[] = [
   { id: 'ao_oven',          group: 'Kitchen', name: 'Inside oven',              price: 30, unit: 'each',       icon: 'oven',      bundled: true },
   { id: 'ao_microwave',     group: 'Kitchen', name: 'Inside microwave',         price: 10, unit: 'each',       icon: 'microwave', bundled: true },
   { id: 'ao_stove',         group: 'Kitchen', name: 'Stove deep clean',         price: 15, unit: 'each',       icon: 'stove',     bundled: true },
-  { id: 'ao_cabinet_fronts',group: 'Kitchen', name: 'Greasy cabinet fronts, full degrease', price: 40, unit: 'per kitchen', icon: 'cabinet', bundled: true, proposed: true },
+  { id: 'ao_cabinet_fronts',group: 'Kitchen', name: 'Greasy cabinet fronts, full degrease', price: 40, unit: 'per kitchen', icon: 'cabinet' },
   { id: 'ao_dish_extra',    group: 'Kitchen', name: 'Dishwashing, extra loads', price: 15, unit: 'per load',   icon: 'dishes',    perItem: true, note: 'First load included' },
 
   { id: 'ao_win_in',   group: 'Windows and detail', name: 'Windows, inside',             price: 5,  unit: 'per window',    icon: 'window',      perItem: true, bundled: true },
@@ -204,9 +199,9 @@ export const ADD_ONS: AddOn[] = [
   { id: 'ao_doors',    group: 'Windows and detail', name: 'Doors and frames',            price: 5,  unit: 'per door',      icon: 'door',        perItem: true, bundled: true },
   { id: 'ao_walls',    group: 'Windows and detail', name: 'Wipe walls',                  price: 25, unit: 'per wall side', icon: 'wall',        perItem: true },
   { id: 'ao_spot',     group: 'Windows and detail', name: 'Fabric or carpet spot',       price: 20, unit: 'per spot',      icon: 'spot',        perItem: true },
-  { id: 'ao_ceiling_fans', group: 'Windows and detail', name: 'Ceiling fans',            price: 10, unit: 'per fan',       icon: 'fan',         perItem: true, bundled: true, proposed: true },
+  { id: 'ao_ceiling_fans', group: 'Windows and detail', name: 'Ceiling fans',            price: 10, unit: 'per fan',       icon: 'fan',         perItem: true },
 
-  { id: 'ao_accident',  group: 'Mess and pets', name: 'Vomit or pet accident indoors, disinfect', price: 50, unit: 'per area', icon: 'alert', perItem: true, proposed: true },
+  { id: 'ao_accident',  group: 'Mess and pets', name: 'Vomit or pet accident indoors, disinfect', price: 50, unit: 'per area', icon: 'alert', perItem: true },
   { id: 'ao_pet_hair',  group: 'Mess and pets', name: 'Heavy pet hair',              price: 30, unit: 'per visit',      icon: 'paw' },
   { id: 'ao_pet_waste', group: 'Mess and pets', name: 'Pet waste, yard or patio',    price: 30, unit: 'per visit',      icon: 'poop' },
   { id: 'ao_trash',     group: 'Mess and pets', name: 'Extra trash bags',            price: 20, unit: 'per 13-gal bag', icon: 'trash-bag', perItem: true },
@@ -216,9 +211,9 @@ export const ADD_ONS: AddOn[] = [
   { id: 'ao_laundry',     group: 'Laundry', name: 'Wash and dry light items',    price: 20, unit: 'per load', icon: 'laundry', perItem: true },
   { id: 'ao_laundry_run', group: 'Laundry', name: 'Laundromat run, bulky items', price: 30, unit: 'plus cost', icon: 'bag', passThrough: true },
 
-  { id: 'ao_trash_can',     group: 'Outdoor and other', name: 'Outdoor trash can wash',  price: 15, unit: 'per can',   icon: 'trash-can', perItem: true, note: 'Needs a hose and a place to drain', proposed: true },
-  { id: 'ao_garage',        group: 'Outdoor and other', name: 'Sweep garage',            price: 30, unit: 'each',      icon: 'garage', proposed: true },
-  { id: 'ao_patio',         group: 'Outdoor and other', name: 'Sweep patio or balcony, wipe outdoor furniture', price: 25, unit: 'each', icon: 'patio', proposed: true },
+  { id: 'ao_trash_can',     group: 'Outdoor and other', name: 'Outdoor trash can wash',  price: 15, unit: 'per can',   icon: 'trash-can', perItem: true, note: 'Needs a hose and a place to drain' },
+  { id: 'ao_garage',        group: 'Outdoor and other', name: 'Sweep garage',            price: 30, unit: 'each',      icon: 'garage' },
+  { id: 'ao_patio',         group: 'Outdoor and other', name: 'Sweep patio or balcony, wipe outdoor furniture', price: 25, unit: 'each', icon: 'patio' },
   { id: 'ao_grill',         group: 'Outdoor and other', name: 'Grill deep clean',        price: 85, unit: 'each',      icon: 'grill' },
   { id: 'ao_outdoor_stain', group: 'Outdoor and other', name: 'Outdoor stain washing',   price: 15, unit: 'per spot',  icon: 'stain', perItem: true },
   { id: 'ao_crib',          group: 'Outdoor and other', name: 'Crib or fold-out bed setup', price: 10, unit: 'each',   icon: 'crib' },
@@ -238,5 +233,8 @@ export const POLICY_FEES = {
   waiting: { label: 'Waiting on site over 15 minutes', amount: 25, unit: 'per 30 minutes' },
 }
 
-/** Deposit at booking. Proposed: not charged anywhere yet. */
+/**
+ * Deposit at booking. Amounts confirmed by Tatiana (Nov 19 2026), but no deposit is charged yet:
+ * keep `proposed` until charging at booking is built, so the site doesn't promise a deposit it doesn't take.
+ */
 export const DEPOSIT = { flat: 50, percent: 0.25, percentOver: 500, proposed: true }

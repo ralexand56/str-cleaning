@@ -15,7 +15,6 @@ export function jobTypeFor(service: ServiceType, packageKey: string): string {
   switch (packageKey) {
     case 'plan_standard': return 'STR_SUBSCRIPTION_STANDARD'
     case 'plan_premium':  return 'STR_SUBSCRIPTION_PREMIUM'
-    case 'long_stay':     return 'STR_DEEP'
     case 'seasonal':      return 'STR_SEASONAL'
     case 'startup':       return 'STR_STARTUP'
     default:              return 'STR_TURNOVER'

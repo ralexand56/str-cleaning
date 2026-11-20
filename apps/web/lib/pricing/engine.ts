@@ -71,9 +71,8 @@ export function strPackagePrice(size: StrSize, pkg: StrPackage): number {
   return size[pkg.priceField]
 }
 
-/** The long-stay price for a size is shown only if long-stay itself and that size's price are public. */
-export function isStrPriceProposed(size: StrSize, pkg: StrPackage): boolean {
-  return !!pkg.proposed || (pkg.key === 'long_stay' && !!size.longStayProposed)
+export function isStrPriceProposed(_size: StrSize, pkg: StrPackage): boolean {
+  return !!pkg.proposed
 }
 
 /** Residential standard price before rounding: $50 + $0.09/sq ft + $25/bedroom + $40/bathroom. */
@@ -188,7 +187,6 @@ function quoteStr(input: StrQuoteInput, opts?: QuoteOptions): Quote {
   const notes: string[] = []
   if (pkg.key === 'turnover') notes.push('Booking 5 or more turnovers a month? A monthly plan locks this rate and adds reporting.')
   if (pkg.key === 'seasonal') notes.push('Best in the slow months: September–October and January–February. Premium Care includes one a year.')
-  if (pkg.key === 'long_stay') notes.push('For stays of 7 nights or more.')
 
   return finish({ lines, period: 'visit', subs: [], notes, quoteRequired: false })
 }
@@ -249,8 +247,8 @@ function quotePostConstruction(input: PostConstructionQuoteInput, opts?: QuoteOp
   const lines: QuoteLine[] = []
   const base = input.sqft * pass.rate
   lines.push({ label: `${pass.label}, ${input.sqft.toLocaleString()} sq ft × $${pass.rate.toFixed(2)}`, amount: base })
-  if (showProposed(opts) && base < POST_CONSTRUCTION_MINIMUM.amount) {
-    lines.push({ label: 'Job minimum', amount: POST_CONSTRUCTION_MINIMUM.amount - base, proposed: POST_CONSTRUCTION_MINIMUM.proposed })
+  if (base < POST_CONSTRUCTION_MINIMUM.amount) {
+    lines.push({ label: 'Job minimum', amount: POST_CONSTRUCTION_MINIMUM.amount - base })
   }
   for (const item of visiblePostConstructionItems(opts)) {
     const n = Math.max(0, Math.floor(input.counts[item.key] ?? 0))

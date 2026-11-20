@@ -19,9 +19,9 @@ import {
   visibleAddOns,
   visibleFrequencies,
   visiblePostConstructionItems,
-  visibleStrPackages,
 } from '@/lib/pricing/engine'
 import { SHOW_PROPOSED } from '@/lib/pricing/visibility'
+import { serviceAreaText } from '@/lib/booking/serviceArea'
 
 export const metadata = {
   title: 'Pricing — STR Cleaning Crew',
@@ -63,7 +63,6 @@ const RES_EXAMPLES: [number, number, number][] = [
 ]
 
 export default function PricingPage() {
-  const longStayShown = visibleStrPackages().some((p) => p.key === 'long_stay')
   const freqs = visibleFrequencies()
   const pcItems = visiblePostConstructionItems()
   const addOns = [...new Map([...visibleAddOns('str'), ...visibleAddOns('residential')].map((a) => [a.id, a])).values()]
@@ -80,6 +79,7 @@ export default function PricingPage() {
               Choose your service, size, package and add-ons to see your price. Booking is a request: we review it and
               confirm your final price and time.
             </p>
+            <p className="font-marcellus text-sm opacity-60 max-w-2xl mt-3">Serving {serviceAreaText()}.</p>
             {SHOW_PROPOSED && (
               <p className="mt-4 font-sans text-xs rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 max-w-2xl">
                 Review mode: prices tagged Proposed are not confirmed and are hidden on the live site.
@@ -105,12 +105,9 @@ export default function PricingPage() {
               ])}
             />
             <Table
-              head={['Size', ...(longStayShown ? ['Long-stay turnover'] : []), 'Seasonal deep clean', 'STR start-up']}
+              head={['Size', 'Seasonal deep clean', 'STR start-up']}
               rows={STR_SIZES.map((s) => [
                 s.label,
-                ...(longStayShown
-                  ? [<span key="ls">{formatMoney(s.longStay)}<ProposedTag /></span>]
-                  : []),
                 formatMoney(s.seasonal),
                 formatMoney(s.startup),
               ])}
@@ -118,7 +115,6 @@ export default function PricingPage() {
             <ul className="font-marcellus text-sm opacity-70 list-disc pl-5 flex flex-col gap-1.5">
               <li>Monthly plans include {STR_PLAN.includedTurnovers} turnovers. In a month with fewer bookings the crew uses the time for a deeper clean.</li>
               <li>3-month minimum, then month to month with 30 days’ notice. Prepay quarterly or yearly for 10% off.</li>
-              {longStayShown && <li>Long-stay turnover applies after stays of 7 nights or more.<ProposedTag /></li>}
               <li>Charging cameras, locks and smart devices is included in every turnover.</li>
             </ul>
           </section>
@@ -164,7 +160,7 @@ export default function PricingPage() {
                   <span key={i.key}>{i.label}{i.proposed && <ProposedTag />}</span>,
                   `${formatMoney(i.price)} ${i.unit.startsWith('per') ? i.unit.split(',')[0] : i.unit}`,
                 ]),
-                ...(SHOW_PROPOSED ? [[<span key="min">Job minimum<ProposedTag /></span>, formatMoney(POST_CONSTRUCTION_MINIMUM.amount)]] : []),
+                ['Job minimum', formatMoney(POST_CONSTRUCTION_MINIMUM.amount)],
               ]}
             />
             <p className="font-marcellus text-sm opacity-70 max-w-3xl">
@@ -212,11 +208,11 @@ export default function PricingPage() {
                 [TIMING_FEES.sundayHoliday.label, `+${formatMoney(TIMING_FEES.sundayHoliday.amount)}`],
                 [POLICY_FEES.lateCancel.label, formatMoney(POLICY_FEES.lateCancel.amount)],
                 [POLICY_FEES.waiting.label, `${formatMoney(POLICY_FEES.waiting.amount)} ${POLICY_FEES.waiting.unit}`],
-                ...(SHOW_PROPOSED
+                ['Reschedule 48+ hours before', 'Free'],
+                ['Lockout (crew can’t get in)', 'Treated as a late cancellation'],
+                ...(!DEPOSIT.proposed || SHOW_PROPOSED
                   ? [
-                      [<span key="d">Deposit at booking<ProposedTag /></span>, `${formatMoney(DEPOSIT.flat)}, or ${Math.round(DEPOSIT.percent * 100)}% on move-out and post-construction jobs over ${formatMoney(DEPOSIT.percentOver)}`],
-                      [<span key="r">Reschedule 48+ hours before<ProposedTag /></span>, 'Free'],
-                      [<span key="lo">Lockout (crew can’t get in)<ProposedTag /></span>, 'Treated as a late cancellation'],
+                      [<span key="d">Deposit at booking{DEPOSIT.proposed && <ProposedTag />}</span>, `${formatMoney(DEPOSIT.flat)}, or ${Math.round(DEPOSIT.percent * 100)}% on move-out and post-construction jobs over ${formatMoney(DEPOSIT.percentOver)}. Goes toward your bill; kept if you cancel less than 48 hours before.`],
                     ]
                   : []),
               ]}
@@ -227,12 +223,8 @@ export default function PricingPage() {
               <p>Your own products: if you’d like eco-friendly or specific products, we can use yours on request. Leave them out where the crew can find them.</p>
               <p>Short-term rentals: toilets, showers and kitchens are always disinfected with our own disinfectant, whatever else is used, for guest safety.</p>
               <p>We don’t use harsh or strong chemicals supplied by the client. When your own products are used, we can’t guarantee the cleaning result.</p>
-              {SHOW_PROPOSED && (
-                <>
-                  <h3 className="text-lg mt-3">Re-clean promise<ProposedTag /></h3>
-                  <p>If something on the checklist was missed, tell us within 24 hours with photos and we come back to fix it at no charge.</p>
-                </>
-              )}
+              <h3 className="text-lg mt-3">Re-clean promise</h3>
+              <p>If something on the checklist was missed, tell us within 24 hours with photos and we come back to fix it at no charge.</p>
             </div>
           </section>
         </div>

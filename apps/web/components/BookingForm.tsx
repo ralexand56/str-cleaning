@@ -39,9 +39,7 @@ import {
   TIME_WINDOWS,
   type BookingIntake,
 } from '@/lib/booking/intake'
-
-/** Shown on the confirmation screen. Tatiana's plan leaves this as "[X] business hours". */
-const CONFIRM_WITHIN = '2 business hours'
+import { inServiceArea, serviceAreaText } from '@/lib/booking/serviceArea'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -315,7 +313,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
       >
         <p className="font-marcellus text-[clamp(2rem,4vw,3.2rem)] leading-[1.1] mb-5">Request received.</p>
         <p className="font-marcellus text-base opacity-60 max-w-md mx-auto leading-relaxed">
-          We’ll confirm your price and time within {CONFIRM_WITHIN}. A copy of your request is on its way to {contact.email}.
+          We’ll get back to you to confirm your price and time. A copy of your request is on its way to {contact.email}.
         </p>
       </motion.div>
     )
@@ -355,6 +353,11 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
                 <input type="text" value={contact.state} onChange={(e) => update({ state: e.target.value.toUpperCase() })} placeholder="State" className={inputCls} maxLength={2} />
                 <input type="text" inputMode="numeric" maxLength={5} value={contact.zip} onChange={(e) => update({ zip: e.target.value.replace(/\D/g, '') })} placeholder="ZIP" className={inputCls} />
               </div>
+              {contact.city.trim().length > 2 && !inServiceArea(contact.city) && (
+                <p className="font-marcellus text-sm rounded-xl border border-dark-brown/15 px-4 py-3">
+                  We mainly serve {serviceAreaText()}. You can still send your request and we’ll let you know if we can reach you.
+                </p>
+              )}
             </div>
 
             <HomeInputs state={calc} update={updateCalc} />

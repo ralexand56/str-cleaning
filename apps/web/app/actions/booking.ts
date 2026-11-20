@@ -5,6 +5,7 @@ import { publicDataClient } from '@/lib/data/publicClient'
 import { stripe } from '@/lib/stripe/server'
 import { jobTypeFor } from '@/lib/pricing/jobType'
 import { intakeLines, type BookingIntake } from '@/lib/booking/intake'
+import { inServiceArea } from '@/lib/booking/serviceArea'
 
 const region = process.env.AWS_REGION ?? 'us-east-1'
 const ses    = new SESClient({ region })
@@ -134,7 +135,7 @@ export async function submitBooking(form: BookingFormData) {
             `Arrival:   ${form.timeWindow}`,
             `Same-day:  ${form.emergencySameDay ? 'Yes' : 'No'}`,
             ``,
-            `Address:   ${fullAddress}`,
+            `Address:   ${fullAddress}${inServiceArea(form.city) ? '' : '  ** OUTSIDE SERVICE AREA, check before confirming **'}`,
             ``,
             `Estimate shown to client: ${estimateText}`,
             ...form.quoteLines.map((l) => `  ${l}`),
