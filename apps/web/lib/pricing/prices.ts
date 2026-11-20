@@ -227,10 +227,25 @@ export const TIMING_FEES = {
   sundayHoliday: { label: 'Sunday or holiday', amount: 50 },
 }
 
-/** Policy fees billed manually by the team, shown on the Pricing page and in the FAQ. */
+/**
+ * Policy fees, charged by the team to the card on file (Tatiana, Nov 19 2026). The late-cancellation
+ * fee is per cleaner booked; the team sets the crew size when confirming, so the client sees the
+ * exact amount in their confirmation.
+ */
 export const POLICY_FEES = {
-  lateCancel: { label: 'Cancellation less than 24 hours before', amount: 100 },
+  lateCancel: { label: 'Cancellation less than 24 hours before', amount: 50, unit: 'per cleaner booked' },
   waiting: { label: 'Waiting on site over 15 minutes', amount: 25, unit: 'per 30 minutes' },
+}
+
+/** No deposit (Tatiana, Nov 19 2026): a card is saved at booking and charged after the clean. */
+export const CARD_POLICY = {
+  rescheduleChanges: 2,
+  lines: [
+    'Nothing is charged when you book. We charge your card after the clean, once you have your photo report.',
+    'Reschedule for free, up to 2 changes per booking.',
+    'Cancelling less than 24 hours before is $50 per cleaner booked: for example $50 for a small clean, $100–$150 for a large move-out with 2–3 cleaners. We confirm your crew size with your booking.',
+    'If we can’t get in at the booked time, it counts as a late cancellation.',
+  ],
 }
 
 /**
@@ -239,9 +254,3 @@ export const POLICY_FEES = {
  * team checks they really are new before confirming.
  */
 export const FIRST_TIME_DISCOUNT = { percent: 0.2, label: 'First-time client, 20% off your first visit' }
-
-/**
- * Deposit at booking. Amounts confirmed by Tatiana (Nov 19 2026), but no deposit is charged yet:
- * keep `proposed` until charging at booking is built, so the site doesn't promise a deposit it doesn't take.
- */
-export const DEPOSIT = { flat: 50, percent: 0.25, percentOver: 500, proposed: true }

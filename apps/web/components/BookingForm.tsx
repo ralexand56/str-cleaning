@@ -6,7 +6,7 @@ import { submitBooking } from '@/app/actions/booking'
 import { startBooking } from '@/app/actions/startBooking'
 import { BookingCardCapture, type CardCaptureResult } from '@/components/BookingCardCapture'
 import { PhotoUpload } from '@/components/booking/PhotoUpload'
-import { AddOnTiles, ProposedTag } from '@/components/pricing/AddOnTiles'
+import { AddOnTiles } from '@/components/pricing/AddOnTiles'
 import { QuoteSummary } from '@/components/pricing/QuoteSummary'
 import {
   FrequencyInputs,
@@ -17,7 +17,7 @@ import {
   TimingInputs,
   hasFrequencyChoice,
 } from '@/components/pricing/ServiceInputs'
-import { ADD_ONS, DEPOSIT, FREQUENCIES, POST_CONSTRUCTION_ITEMS } from '@/lib/pricing/prices'
+import { ADD_ONS, CARD_POLICY, FREQUENCIES, POST_CONSTRUCTION_ITEMS } from '@/lib/pricing/prices'
 import {
   SERVICE_TYPE_LABELS,
   calculateQuote,
@@ -28,7 +28,6 @@ import {
 } from '@/lib/pricing/engine'
 import { DEFAULT_CALC_STATE, bundledIncluded, isMonthlyPlan, toQuoteInput, type CalcState } from '@/lib/pricing/calcState'
 import { packageKeyOf } from '@/lib/pricing/jobType'
-import { SHOW_PROPOSED } from '@/lib/pricing/visibility'
 import {
   ACCESS_METHODS,
   CHECKLIST,
@@ -75,7 +74,7 @@ const STEP_TITLES: Record<StepId, string> = {
   photos: 'Photos',
   dates: 'Preferred dates',
   access: 'Access and products',
-  card: SHOW_PROPOSED ? 'Deposit and card' : 'Card on file',
+  card: 'Card and cancellation policy',
   review: 'Review and send',
 }
 
@@ -103,6 +102,8 @@ function isStepValid(step: StepId, calc: CalcState, c: Contact, intake: BookingI
       return !!intake.dateWindows[0]?.date && !!intake.dateWindows[0]?.window
     case 'access':
       return !!c.lastName.trim() && !!intake.access?.method
+    case 'card':
+      return !!c.stripePaymentMethodId && !!intake.policyAccepted
     default:
       return true
   }
@@ -121,7 +122,7 @@ function stepSummary(step: StepId, calc: CalcState, c: Contact, intake: BookingI
     case 'photos': return photoCount ? `${photoCount} photo${photoCount !== 1 ? 's' : ''}` : 'None'
     case 'dates': return intake.dateWindows.filter((d) => d.date).map((d) => new Date(d.date + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })).join(', ')
     case 'access': return `${intake.access?.method ?? ''} · ${intake.products === 'theirs' ? 'your products' : 'our products'}`
-    case 'card': return c.stripePaymentMethodId && c.stripePaymentMethodId !== 'skipped' ? 'Card saved' : 'Skipped'
+    case 'card': return c.stripePaymentMethodId === 'unavailable' ? 'We’ll call to take your card' : 'Card saved, policy accepted'
     default: return ''
   }
 }
@@ -293,7 +294,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
         notes: contact.notes,
         stripeCustomerId: contact.stripeCustomerId || undefined,
         stripePaymentMethodId:
-          contact.stripePaymentMethodId && contact.stripePaymentMethodId !== 'skipped' ? contact.stripePaymentMethodId : undefined,
+          contact.stripePaymentMethodId && contact.stripePaymentMethodId !== 'unavailable' ? contact.stripePaymentMethodId : undefined,
         customerId: contact.customerId || undefined,
       })
       setSubmitted(true)
@@ -555,52 +556,44 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
         )
 
       case 'card': {
-        const cardSaved = !!contact.stripePaymentMethodId
-        const depositAmount =
-          (calc.service === 'post_construction' || (calc.service === 'residential' && calc.resPackage === 'move')) && quote.total > DEPOSIT.percentOver
-            ? Math.round(quote.total * DEPOSIT.percent)
-            : DEPOSIT.flat
+        const status = contact.stripePaymentMethodId
         return (
-          <div className="flex flex-col gap-4 max-w-lg">
-            {SHOW_PROPOSED && (
-              <p className="font-marcellus text-sm">
-                Deposit: {formatMoney(depositAmount)}, goes toward your final bill.<ProposedTag />
-                <span className="block font-sans text-xs text-amber-800 mt-1">Review mode only: the deposit isn’t charged yet.</span>
+          <div className="flex flex-col gap-5 max-w-lg">
+            <div className="font-marcellus text-sm flex flex-col gap-2 rounded-2xl border border-dark-brown/12 px-5 py-4">
+              <p className="opacity-60 uppercase tracking-widest text-xs">No deposit. Here’s how payment works</p>
+              <ul className="list-disc pl-5 flex flex-col gap-1.5">
+                {CARD_POLICY.lines.map((l) => <li key={l}>{l}</li>)}
+              </ul>
+            </div>
+
+            {!status && (
+              <BookingCardCapture
+                email={contact.email}
+                firstName={contact.firstName}
+                lastName={contact.lastName}
+                phone={contact.phone}
+                onSaved={(r: CardCaptureResult) =>
+                  update({ stripeCustomerId: r.stripeCustomerId, stripePaymentMethodId: r.stripePaymentMethodId, customerId: r.customerId })
+                }
+                onUnavailable={() => update({ stripePaymentMethodId: 'unavailable' })}
+              />
+            )}
+            {status && status !== 'unavailable' && <p className="font-marcellus text-sm opacity-70">Card saved. Nothing has been charged.</p>}
+            {status === 'unavailable' && (
+              <p className="font-marcellus text-sm opacity-70">
+                We couldn’t load the card form right now. Send your request anyway and we’ll call you to take your card.
               </p>
             )}
-            {!cardSaved && (
-              <>
-                <p className="font-marcellus text-sm opacity-60">
-                  Save a card so we can charge the balance after the job and the photo report. Nothing is charged now. You can skip this and pay later.
-                </p>
-                <BookingCardCapture
-                  email={contact.email}
-                  firstName={contact.firstName}
-                  lastName={contact.lastName}
-                  phone={contact.phone}
-                  onSaved={(r: CardCaptureResult) =>
-                    update({ stripeCustomerId: r.stripeCustomerId, stripePaymentMethodId: r.stripePaymentMethodId, customerId: r.customerId })
-                  }
-                  onSkip={() => {
-                    update({ stripePaymentMethodId: 'skipped' })
-                    completeStep('card')
-                  }}
-                />
-                {/* Always offer a way forward, even if card setup fails to load. */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    update({ stripePaymentMethodId: 'skipped' })
-                    completeStep('card')
-                  }}
-                  className="self-start font-marcellus text-sm underline opacity-60 hover:opacity-100 cursor-pointer bg-transparent border-none p-0"
-                >
-                  Continue without a card
-                </button>
-              </>
-            )}
-            {cardSaved && contact.stripePaymentMethodId !== 'skipped' && <p className="font-marcellus text-sm opacity-60">Card saved.</p>}
-            {cardSaved && contact.stripePaymentMethodId === 'skipped' && <p className="font-marcellus text-sm opacity-60">No card for now.</p>}
+
+            <label className="flex items-start gap-3 cursor-pointer font-marcellus text-sm">
+              <input
+                type="checkbox"
+                checked={!!intake.policyAccepted}
+                onChange={(e) => updateIntake({ policyAccepted: e.target.checked })}
+                className="w-4 h-4 mt-0.5"
+              />
+              I agree to the payment and cancellation policy above.
+            </label>
           </div>
         )
       }
@@ -634,7 +627,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
         const isActive = currentStep === step
         if (!isCompleted && !isActive) return null
         const isLast = i === steps.length - 1
-        const hideContinue = isLast || (step === 'card' && !contact.stripePaymentMethodId)
+        const hideContinue = isLast
 
         return (
           <motion.div

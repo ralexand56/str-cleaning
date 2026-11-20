@@ -20,7 +20,7 @@ export type CardCaptureResult = {
 function CardForm({ ids, onSaved, onSkip }: {
   ids: { stripeCustomerId: string; customerId: string }
   onSaved: (r: CardCaptureResult) => void
-  onSkip: () => void
+  onSkip?: () => void
 }) {
   const stripe = useStripe()
   const elements = useElements()
@@ -63,25 +63,30 @@ function CardForm({ ids, onSaved, onSkip }: {
         >
           {submitting ? 'Saving…' : 'Save card'}
         </button>
-        <button
-          type="button"
-          onClick={onSkip}
-          className="px-6 py-3 rounded-full border border-dark-brown/20 font-marcellus text-sm cursor-pointer"
-        >
-          Skip for now
-        </button>
+        {onSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="px-6 py-3 rounded-full border border-dark-brown/20 font-marcellus text-sm cursor-pointer"
+          >
+            Skip for now
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
-export function BookingCardCapture({ email, firstName, lastName, phone, onSaved, onSkip }: {
+export function BookingCardCapture({ email, firstName, lastName, phone, onSaved, onSkip, onUnavailable }: {
   email: string
   firstName: string
   lastName: string
   phone: string
   onSaved: (r: CardCaptureResult) => void
-  onSkip: () => void
+  /** Omit to make the card required (no "Skip for now"). */
+  onSkip?: () => void
+  /** Called when the card form can't load (Stripe not configured or setup failed). */
+  onUnavailable?: () => void
 }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [ids, setIds] = useState<{ stripeCustomerId: string; customerId: string } | null>(null)
@@ -96,12 +101,21 @@ export function BookingCardCapture({ email, firstName, lastName, phone, onSaved,
         setClientSecret(r.clientSecret)
         setIds({ stripeCustomerId: r.stripeCustomerId, customerId: r.customerId })
       })
-      .catch(() => { if (!cancelled) setError('Could not start card setup.') })
+      .catch(() => {
+        if (cancelled) return
+        setError('Could not start card setup.')
+        onUnavailable?.()
+      })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email])
 
-  // Card capture is optional scaffolding — if Stripe isn't configured, booking proceeds without it.
+  useEffect(() => {
+    if (!stripePromise) onUnavailable?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // If Stripe isn't configured, the caller decides how to proceed (onUnavailable).
   if (!stripePromise) return null
   if (error) return <p className="font-marcellus text-sm opacity-40">{error}</p>
   if (!clientSecret || !ids) return <p className="font-marcellus text-sm opacity-40">Loading card form…</p>

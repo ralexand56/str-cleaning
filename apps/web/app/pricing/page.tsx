@@ -3,7 +3,7 @@ import { PriceCalculator } from '@/components/pricing/PriceCalculator'
 import { ProposedTag } from '@/components/pricing/AddOnTiles'
 import {
   ADD_ON_GROUPS,
-  DEPOSIT,
+  CARD_POLICY,
   POLICY_FEES,
   POST_CONSTRUCTION_MINIMUM,
   POST_CONSTRUCTION_PASSES,
@@ -206,15 +206,11 @@ export default function PricingPage() {
               rows={[
                 [TIMING_FEES.sameDay.label, `+${formatMoney(TIMING_FEES.sameDay.amount)}`],
                 [TIMING_FEES.sundayHoliday.label, `+${formatMoney(TIMING_FEES.sundayHoliday.amount)}`],
-                [POLICY_FEES.lateCancel.label, formatMoney(POLICY_FEES.lateCancel.amount)],
+                [POLICY_FEES.lateCancel.label, `${formatMoney(POLICY_FEES.lateCancel.amount)} ${POLICY_FEES.lateCancel.unit}`],
                 [POLICY_FEES.waiting.label, `${formatMoney(POLICY_FEES.waiting.amount)} ${POLICY_FEES.waiting.unit}`],
-                ['Reschedule 48+ hours before', 'Free'],
+                ['Reschedule', `Free, up to ${CARD_POLICY.rescheduleChanges} changes per booking`],
                 ['Lockout (crew can’t get in)', 'Treated as a late cancellation'],
-                ...(!DEPOSIT.proposed || SHOW_PROPOSED
-                  ? [
-                      [<span key="d">Deposit at booking{DEPOSIT.proposed && <ProposedTag />}</span>, `${formatMoney(DEPOSIT.flat)}, or ${Math.round(DEPOSIT.percent * 100)}% on move-out and post-construction jobs over ${formatMoney(DEPOSIT.percentOver)}. Goes toward your bill; kept if you cancel less than 48 hours before.`],
-                    ]
-                  : []),
+                ['Deposit', 'None. We save your card at booking and charge it after the clean'],
               ]}
             />
             <div className="font-marcellus text-sm opacity-80 max-w-3xl flex flex-col gap-3">

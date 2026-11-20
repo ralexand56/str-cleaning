@@ -6,6 +6,7 @@ import { stripe } from '@/lib/stripe/server'
 import { jobTypeFor } from '@/lib/pricing/jobType'
 import { intakeLines, type BookingIntake } from '@/lib/booking/intake'
 import { inServiceArea } from '@/lib/booking/serviceArea'
+import { CARD_POLICY } from '@/lib/pricing/prices'
 
 const region = process.env.AWS_REGION ?? 'us-east-1'
 const ses    = new SESClient({ region })
@@ -143,6 +144,7 @@ export async function submitBooking(form: BookingFormData) {
             ``,
             ...intakeLines(form.intake).map(([k, v]) => `${(k + ':').padEnd(22)} ${v}`),
             `Photos:    ${photoKeys.length} (view them on the admin job page)`,
+            `Card:      ${form.stripePaymentMethodId ? 'Saved' : 'NOT SAVED (card form failed to load), call the client to take a card'}`,
             ``,
             `Notes:     ${form.notes || 'None'}`,
             ``,
@@ -177,6 +179,9 @@ export async function submitBooking(form: BookingFormData) {
               `Estimate: ${estimateText}`,
               ``,
               `What happens next: we review your request and get back to you to confirm your final price and time. Nothing is booked until we confirm.`,
+              ``,
+              `Payment and cancellation:`,
+              ...CARD_POLICY.lines.map((l) => `- ${l}`),
               ``,
               `Questions? Just reply to this email.`,
               ``,
