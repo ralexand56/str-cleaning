@@ -44,7 +44,7 @@ export function PriceCalculator({ initial }: { initial?: Partial<CalcState> }) {
           <div className="flex flex-col gap-4">
             <span className={fieldLabel}>Timing and discounts</span>
             <TimingInputs state={state} update={update} withSundayToggle />
-            <FirstTimeToggle state={state} update={update} />
+            {state.service === 'residential' && <FirstTimeToggle state={state} update={update} />}
           </div>
         )}
       </div>

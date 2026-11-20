@@ -81,9 +81,7 @@ export function QuoteBuilder({ onCreated }: { onCreated?: (jobId: string) => voi
           {calc.service !== 'post_construction' && !isMonthlyPlan(calc) && (
             <TimingInputs state={calc} update={update} withSundayToggle />
           )}
-          {calc.service !== 'post_construction' && !isMonthlyPlan(calc) && (
-            <FirstTimeToggle state={calc} update={update} />
-          )}
+          {calc.service === 'residential' && <FirstTimeToggle state={calc} update={update} />}
           <div className="grid grid-cols-2 gap-3">
             <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={field} />
             <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={field} />

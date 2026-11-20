@@ -26,8 +26,6 @@ export interface StrQuoteInput {
   sizeKey: string
   packageKey: StrPackageKey
   turnoversPerMonth?: number
-  /** First-time client: 20% off a single-visit package's price. Ignored for monthly plans. */
-  firstTime?: boolean
   prepay?: boolean
   addOns: SelectedAddOn[]
   timing?: TimingInput
