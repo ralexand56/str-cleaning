@@ -19,6 +19,7 @@ import {
   visibleAddOns,
   visibleFrequencies,
   visiblePostConstructionItems,
+  strPlanSavings,
 } from '@/lib/pricing/engine'
 import { SHOW_PROPOSED } from '@/lib/pricing/visibility'
 import { serviceAreaText } from '@/lib/booking/serviceArea'
@@ -95,12 +96,13 @@ export default function PricingPage() {
           <section aria-labelledby="str" className="flex flex-col gap-5">
             <h2 id="str" className="font-marcellus text-2xl">Short-term rentals</h2>
             <Table
-              head={['Size', 'Turnover', 'Extra turnover on a plan', 'Standard plan /mo', 'Premium Care /mo']}
+              head={['Size', 'Trial turnover', 'Standard plan /mo', 'Plan saves /mo', 'Extra turnover on a plan', 'Premium Care /mo']}
               rows={STR_SIZES.map((s) => [
                 <span key="l">{s.label}<span className="block text-xs opacity-50">{s.sqft}</span></span>,
                 formatMoney(s.turnover),
-                formatMoney(s.extraTurnover),
                 formatMoney(s.standardPlan),
+                formatMoney(strPlanSavings(s)),
+                formatMoney(s.extraTurnover),
                 formatMoney(s.premiumPlan),
               ])}
             />
@@ -113,6 +115,7 @@ export default function PricingPage() {
               ])}
             />
             <ul className="font-marcellus text-sm opacity-70 list-disc pl-5 flex flex-col gap-1.5">
+              <li>Try one turnover first. Join the Standard plan within {STR_PLAN.trialCreditDays} days and we take the trial off your first month.</li>
               <li>Monthly plans include {STR_PLAN.includedTurnovers} turnovers. In a month with fewer bookings the crew uses the time for a deeper clean.</li>
               <li>3-month minimum, then month to month with 30 days’ notice. Prepay quarterly or yearly for 10% off.</li>
               <li>Charging cameras, locks and smart devices is included in every turnover.</li>

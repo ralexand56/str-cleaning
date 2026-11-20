@@ -24,15 +24,19 @@ export interface StrSize {
   startup: number
 }
 
+/**
+ * The single turnover is the trial visit, priced about 15% above a plan turnover so the
+ * Standard plan visibly saves money (Tatiana, Nov 20 2026). No first-time discount on STR.
+ */
 export const STR_SIZES: StrSize[] = [
-  { key: 'studio', label: 'Studio / 1 bed 1 bath', sqft: 'up to 800 sq ft',    turnover: 175, extraTurnover: 160, standardPlan: 875,  premiumPlan: 1125, seasonal: 1095, startup: 895 },
-  { key: '2b15b',  label: '2 bed 1.5 bath',        sqft: '800–1,200 sq ft',    turnover: 225, extraTurnover: 200, standardPlan: 1125, premiumPlan: 1425, seasonal: 1295, startup: 895 },
-  { key: '2b2b',   label: '2 bed 2 bath',          sqft: '800–1,200 sq ft',    turnover: 240, extraTurnover: 215, standardPlan: 1200, premiumPlan: 1500, seasonal: 1495, startup: 895 },
-  { key: '3b2b',   label: '3 bed 2 bath',          sqft: '1,200–1,500 sq ft',  turnover: 265, extraTurnover: 240, standardPlan: 1325, premiumPlan: 1625, seasonal: 1595, startup: 895 },
-  { key: '3b25b',  label: '3 bed 2.5 bath',        sqft: '1,500–2,000 sq ft',  turnover: 315, extraTurnover: 285, standardPlan: 1575, premiumPlan: 1925, seasonal: 1795, startup: 895 },
-  { key: '4b3b',   label: '4 bed 3 bath',          sqft: '2,000–2,500 sq ft',  turnover: 355, extraTurnover: 320, standardPlan: 1775, premiumPlan: 2175, seasonal: 2395, startup: 1195 },
-  { key: '5b4b',   label: '5 bed 4 bath',          sqft: '2,500–3,000 sq ft',  turnover: 430, extraTurnover: 385, standardPlan: 2150, premiumPlan: 2600, seasonal: 3195, startup: 1195 },
-  { key: '5b5b',   label: '5 bed 5+ bath',         sqft: '3,000+ sq ft',       turnover: 495, extraTurnover: 445, standardPlan: 2475, premiumPlan: 2975, seasonal: 3695, startup: 1195 },
+  { key: 'studio', label: 'Studio / 1 bed 1 bath', sqft: 'up to 800 sq ft',    turnover: 200, extraTurnover: 160, standardPlan: 875,  premiumPlan: 1125, seasonal: 1095, startup: 895 },
+  { key: '2b15b',  label: '2 bed 1.5 bath',        sqft: '800–1,200 sq ft',    turnover: 260, extraTurnover: 200, standardPlan: 1125, premiumPlan: 1425, seasonal: 1295, startup: 895 },
+  { key: '2b2b',   label: '2 bed 2 bath',          sqft: '800–1,200 sq ft',    turnover: 275, extraTurnover: 215, standardPlan: 1200, premiumPlan: 1500, seasonal: 1495, startup: 895 },
+  { key: '3b2b',   label: '3 bed 2 bath',          sqft: '1,200–1,500 sq ft',  turnover: 305, extraTurnover: 240, standardPlan: 1325, premiumPlan: 1625, seasonal: 1595, startup: 895 },
+  { key: '3b25b',  label: '3 bed 2.5 bath',        sqft: '1,500–2,000 sq ft',  turnover: 360, extraTurnover: 285, standardPlan: 1575, premiumPlan: 1925, seasonal: 1795, startup: 895 },
+  { key: '4b3b',   label: '4 bed 3 bath',          sqft: '2,000–2,500 sq ft',  turnover: 410, extraTurnover: 320, standardPlan: 1775, premiumPlan: 2175, seasonal: 2395, startup: 1195 },
+  { key: '5b4b',   label: '5 bed 4 bath',          sqft: '2,500–3,000 sq ft',  turnover: 495, extraTurnover: 385, standardPlan: 2150, premiumPlan: 2600, seasonal: 3195, startup: 1195 },
+  { key: '5b5b',   label: '5 bed 5+ bath',         sqft: '3,000+ sq ft',       turnover: 570, extraTurnover: 445, standardPlan: 2475, premiumPlan: 2975, seasonal: 3695, startup: 1195 },
 ]
 
 export type StrPackageKey = 'turnover' | 'plan_standard' | 'plan_premium' | 'seasonal' | 'startup'
@@ -48,12 +52,12 @@ export interface StrPackage {
 }
 
 export const STR_PACKAGES: StrPackage[] = [
-  { key: 'turnover',      label: 'Turnover, single visit',     monthly: false, priceField: 'turnover',
-    description: 'Inspection, full clean, linens and towels, photo report, restock check.' },
+  { key: 'turnover',      label: 'Try one turnover',           monthly: false, priceField: 'turnover',
+    description: 'See our work first. One visit, no commitment: inspection, full clean, linens and towels, photo report, restock check.' },
   { key: 'plan_standard', label: 'Monthly plan: Standard',     monthly: true,  priceField: 'standardPlan',
-    description: '5 turnovers a month included. Extra turnovers at the extra-turnover rate.' },
+    description: '5 turnovers a month. We become your property’s care team: onboarding walkthrough, a photo report after every turnover, restock checks, and we flag anything broken or damaged.' },
   { key: 'plan_premium',  label: 'Monthly plan: Premium Care', monthly: true,  priceField: 'premiumPlan',
-    description: 'Standard plus same-day priority, maintenance issue reporting, an account manager and 1 seasonal deep clean a year.' },
+    description: 'Standard plus same-day priority, follow-up on maintenance issues, an account manager and 1 seasonal deep clean a year.' },
   { key: 'seasonal',      label: 'Seasonal deep clean',        monthly: false, priceField: 'seasonal',
     description: 'Off-season full reset over 1–2 days: curtains, carpet, upholstery, inside cabinets and appliances.' },
   { key: 'startup',       label: 'STR start-up',               monthly: false, priceField: 'startup',
@@ -62,6 +66,8 @@ export const STR_PACKAGES: StrPackage[] = [
 
 export const STR_PLAN = {
   includedTurnovers: 5,
+  /** Join a monthly plan within this many days of a trial turnover and the trial is taken off the first month (Tatiana, Nov 20 2026). */
+  trialCreditDays: 14,
   prepayDiscount: 0.1,
   terms:
     '3-month minimum, then month to month with 30 days’ notice. In a slower month the crew uses the time for a deeper clean. Add-ons are billed on the visit they’re done.',

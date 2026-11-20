@@ -130,6 +130,11 @@ function timingLines(t?: TimingInput): QuoteLine[] {
   return lines
 }
 
+/** What the Standard plan saves a month against the same number of single (trial) turnovers. */
+export function strPlanSavings(size: StrSize): number {
+  return STR_PLAN.includedTurnovers * size.turnover - size.standardPlan
+}
+
 function firstTimeLine(base: number): QuoteLine {
   return { label: FIRST_TIME_DISCOUNT.label, amount: -Math.round(base * FIRST_TIME_DISCOUNT.percent) }
 }
@@ -186,17 +191,27 @@ function quoteStr(input: StrQuoteInput, opts?: QuoteOptions): Quote {
       lines,
       period: 'month',
       subs: [{ label: 'Average per turnover', amount: Math.round(planTotal / turns) }],
-      notes: [`Monthly price. ${STR_PLAN.terms}`],
+      notes: [
+        ...(pkg.key === 'plan_standard' && strPlanSavings(size) > 0
+          ? [`Saves ${formatMoney(strPlanSavings(size))} a month compared with ${STR_PLAN.includedTurnovers} single turnovers.`]
+          : []),
+        `Monthly price. ${STR_PLAN.terms}`,
+        `Had a trial turnover in the last ${STR_PLAN.trialCreditDays} days? We take it off your first month.`,
+      ],
       quoteRequired: false,
     })
   }
 
-  lines.push({ label: `${pkg.label}, ${size.label}`, amount: strPackagePrice(size, pkg), proposed })
-  if (input.firstTime) lines.push(firstTimeLine(strPackagePrice(size, pkg)))
+  lines.push({ label: `${pkg.key === 'turnover' ? 'Trial turnover' : pkg.label}, ${size.label}`, amount: strPackagePrice(size, pkg), proposed })
   lines.push(...addOns, ...timingLines(input.timing))
 
   const notes: string[] = []
-  if (pkg.key === 'turnover') notes.push('Booking 5 or more turnovers a month? A monthly plan locks this rate and adds reporting.')
+  if (pkg.key === 'turnover') {
+    notes.push(
+      `Join the Standard plan within ${STR_PLAN.trialCreditDays} days and we take this visit off your first month. ` +
+        `The plan is ${formatMoney(size.standardPlan)}/mo for ${STR_PLAN.includedTurnovers} turnovers, ${formatMoney(strPlanSavings(size))} a month less than single visits.`,
+    )
+  }
   if (pkg.key === 'seasonal') notes.push('Best in the slow months: September–October and January–February. Premium Care includes one a year.')
 
   return finish({ lines, period: 'visit', subs: [], notes, quoteRequired: false })

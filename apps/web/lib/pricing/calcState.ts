@@ -74,7 +74,6 @@ export function toQuoteInput(s: CalcState, date?: string): QuoteInput {
         turnoversPerMonth: s.turnovers,
         prepay: s.prepay,
         addOns: s.addOns,
-        firstTime: s.firstTime,
         timing,
       }
     case 'residential':

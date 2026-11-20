@@ -9,6 +9,7 @@ import {
   STR_PLAN,
   STR_SIZES,
   POST_CONSTRUCTION_PASSES,
+  type StrPackage,
 } from '@/lib/pricing/prices'
 import {
   formatMoney,
@@ -16,6 +17,7 @@ import {
   isStrPriceProposed,
   r5,
   residentialStandard,
+  strPlanSavings,
   visibleFrequencies,
   visiblePostConstructionItems,
   visibleStrPackages,
@@ -128,6 +130,56 @@ function NumberField({
         className={numberInput}
       />
     </div>
+  )
+}
+
+/** The two main STR choices, side by side: try one turnover or join the monthly plan. */
+function PlanCard({
+  selected,
+  onSelect,
+  title,
+  badge,
+  price,
+  highlight,
+  description,
+  footnote,
+  proposed,
+}: {
+  selected: boolean
+  onSelect: () => void
+  title: string
+  badge?: string
+  price?: string
+  highlight?: string
+  description: string
+  footnote: string
+  proposed?: boolean
+}) {
+  return (
+    <label
+      className={[
+        'relative flex flex-col gap-2 px-5 pt-5 pb-4 rounded-2xl border cursor-pointer transition-colors',
+        selected ? 'border-dark-brown bg-dark-brown/5' : 'border-dark-brown/15 hover:border-dark-brown/35',
+      ].join(' ')}
+    >
+      <input type="radio" name="strPackage" checked={selected} onChange={onSelect} className="sr-only" />
+      {badge && (
+        <span className="absolute -top-2.5 left-5 px-2.5 py-0.5 rounded-full bg-dark-brown text-stone font-marcellus text-[11px] tracking-wide">
+          {badge}
+        </span>
+      )}
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="font-marcellus text-lg">
+          {title}
+          {proposed && <ProposedTag />}
+        </span>
+        <span aria-hidden className={['w-4 h-4 rounded-full border flex-shrink-0 self-center', selected ? 'border-dark-brown border-[5px]' : 'border-dark-brown/30'].join(' ')} />
+      </span>
+      <span className="font-marcellus text-2xl">{price ?? <span className="text-sm opacity-50">Choose your size for a price</span>}</span>
+      {highlight && <span className="font-marcellus text-sm text-[#3f6b3a]">{highlight}</span>}
+      <span className="font-marcellus text-sm opacity-60">{description}</span>
+      <span className="font-marcellus text-xs opacity-50 mt-auto pt-1">{footnote}</span>
+    </label>
   )
 }
 
@@ -250,24 +302,54 @@ export function HomeInputs({ state, update, options }: InputsProps) {
 /** Package choice with the price next to each one. */
 export function PackageInputs({ state, update, options }: InputsProps) {
   if (state.service === 'str') {
-    const size = getStrSize(state.strSize) ?? STR_SIZES[0]
+    const size = getStrSize(state.strSize)
+    const packages = visibleStrPackages(options)
+    const main = packages.filter((p) => p.key === 'turnover' || p.key === 'plan_standard')
+    const more = packages.filter((p) => !main.includes(p))
+    const price = (p: StrPackage) => (size ? `${formatMoney(size[p.priceField])}${p.monthly ? '/mo' : ''}` : undefined)
+    const savings = size ? strPlanSavings(size) : 0
     return (
-      <div>
-        <span className={fieldLabel}>Package</span>
-        <div className="flex flex-col gap-2">
-          {visibleStrPackages(options).map((p) => (
-            <OptionCard
+      <div className="flex flex-col gap-4">
+        <span className={`${fieldLabel} !mb-0`}>Package</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-6 pt-1">
+          {main.map((p) => (
+            <PlanCard
               key={p.key}
-              name="strPackage"
               selected={state.strPackage === p.key}
               onSelect={() => update({ strPackage: p.key })}
-              title={p.label}
+              title={p.key === 'plan_standard' ? 'Monthly plan' : p.label}
+              badge={p.key === 'plan_standard' ? 'Most popular' : undefined}
+              price={price(p)}
+              highlight={p.key === 'plan_standard' && savings > 0 ? `Save ${formatMoney(savings)} a month` : undefined}
               description={p.description}
-              price={`${formatMoney(size[p.priceField])}${p.monthly ? '/mo' : ''}`}
-              proposed={isStrPriceProposed(size, p)}
+              footnote={
+                p.key === 'turnover'
+                  ? `Join the plan within ${STR_PLAN.trialCreditDays} days and we take this visit off your first month.`
+                  : '3-month minimum, then month to month.'
+              }
+              proposed={!!size && isStrPriceProposed(size, p)}
             />
           ))}
         </div>
+        {more.length > 0 && (
+          <details className="group" open={more.some((p) => p.key === state.strPackage)}>
+            <summary className="font-marcellus text-sm cursor-pointer w-fit opacity-70 hover:opacity-100">More options</summary>
+            <div className="flex flex-col gap-2 mt-3">
+              {more.map((p) => (
+                <OptionCard
+                  key={p.key}
+                  name="strPackage"
+                  selected={state.strPackage === p.key}
+                  onSelect={() => update({ strPackage: p.key })}
+                  title={p.label}
+                  description={p.description}
+                  price={price(p)}
+                  proposed={!!size && isStrPriceProposed(size, p)}
+                />
+              ))}
+            </div>
+          </details>
+        )}
       </div>
     )
   }
@@ -391,14 +473,14 @@ export function ServiceInputs(props: InputsProps) {
   )
 }
 
-/** First-time client tick box: 20% off the first visit (not monthly plans or post-construction). */
+/** First-time client tick box: 20% off the first residential visit (not short-term rentals or post-construction). */
 export function FirstTimeToggle({ state, update }: { state: CalcState; update: (patch: Partial<CalcState>) => void }) {
   return (
     <label className="flex items-start gap-3 cursor-pointer w-fit font-marcellus text-sm">
       <input type="checkbox" checked={state.firstTime} onChange={(e) => update({ firstTime: e.target.checked })} className="w-4 h-4 mt-0.5" />
       <span>
         This is my first time booking with STR Cleaning Crew
-        <span className="block text-xs opacity-60">{Math.round(FIRST_TIME_DISCOUNT.percent * 100)}% off your first visit (not monthly plans or post-construction)</span>
+        <span className="block text-xs opacity-60">{Math.round(FIRST_TIME_DISCOUNT.percent * 100)}% off your first residential clean</span>
       </span>
     </label>
   )

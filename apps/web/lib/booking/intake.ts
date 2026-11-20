@@ -93,7 +93,7 @@ export function intakeLines(i: BookingIntake): [string, string][] {
     ['Products', i.products === 'theirs' ? 'Use the client’s own products' : 'Our professional products'],
     ['Products to avoid', i.productsToAvoid],
     ['Heard about us', i.heardAbout],
-    ['First-time client', i.firstTimeClient ? 'Yes, 20% off the first visit applied. Check they are new.' : undefined],
+    ['First-time client', i.firstTimeClient ? 'Yes (20% off applies to a first residential clean). Check they are new.' : undefined],
     ['Contact consent', i.contactConsent ? 'Yes' : 'No'],
     ['Cancellation policy', i.policyAccepted ? 'Accepted' : undefined],
   ]
