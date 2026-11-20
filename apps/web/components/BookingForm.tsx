@@ -12,6 +12,7 @@ import {
   FrequencyInputs,
   HomeInputs,
   PackageInputs,
+  FirstTimeToggle,
   ServiceTabs,
   TimingInputs,
   hasFrequencyChoice,
@@ -268,6 +269,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
           ...intake,
           dateWindows: intake.dateWindows.filter((d) => d.date),
           pets: calc.service === 'post_construction' ? undefined : intake.pets,
+          firstTimeClient: calc.firstTime,
         },
         photoKeys,
         addOns: addOnLines,
@@ -335,6 +337,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
               <input type="checkbox" checked={intake.contactConsent} onChange={(e) => updateIntake({ contactConsent: e.target.checked })} className="w-4 h-4 mt-0.5" />
               I agree to calls, texts and emails from STR Cleaning Crew about this booking.
             </label>
+            <FirstTimeToggle state={calc} update={updateCalc} />
           </div>
         )
 

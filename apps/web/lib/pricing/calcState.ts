@@ -29,6 +29,8 @@ export interface CalcState {
   addOns: SelectedAddOn[]
   sameDay: boolean
   sundayHoliday: boolean
+  /** First time booking with us: 20% off the first visit. */
+  firstTime: boolean
 }
 
 export const DEFAULT_CALC_STATE: CalcState = {
@@ -49,6 +51,7 @@ export const DEFAULT_CALC_STATE: CalcState = {
   addOns: [],
   sameDay: false,
   sundayHoliday: false,
+  firstTime: false,
 }
 
 /** Residential deep, move-in/out and the first recurring visit include the bundled add-ons. */
@@ -71,6 +74,7 @@ export function toQuoteInput(s: CalcState, date?: string): QuoteInput {
         turnoversPerMonth: s.turnovers,
         prepay: s.prepay,
         addOns: s.addOns,
+        firstTime: s.firstTime,
         timing,
       }
     case 'residential':
@@ -82,6 +86,7 @@ export function toQuoteInput(s: CalcState, date?: string): QuoteInput {
         packageKey: s.resPackage,
         frequency: s.resPackage === 'recurring' ? s.frequency : undefined,
         addOns: s.addOns,
+        firstTime: s.firstTime,
         timing,
       }
     case 'post_construction':
@@ -152,5 +157,6 @@ export function decodeCalcState(params: { service?: string; q?: string }): CalcS
     addOns,
     sameDay: raw.sameDay === true,
     sundayHoliday: raw.sundayHoliday === true,
+    firstTime: raw.firstTime === true,
   }
 }

@@ -5,6 +5,7 @@ import {
   FREQUENCIES,
   RESIDENTIAL_PACKAGES,
   STR_PACKAGES,
+  FIRST_TIME_DISCOUNT,
   STR_PLAN,
   STR_SIZES,
   POST_CONSTRUCTION_PASSES,
@@ -386,6 +387,19 @@ export function ServiceInputs(props: InputsProps) {
       <PackageInputs {...props} />
       {hasFrequencyChoice(props.state) && <FrequencyInputs {...props} />}
     </div>
+  )
+}
+
+/** First-time client tick box: 20% off the first visit (not monthly plans or post-construction). */
+export function FirstTimeToggle({ state, update }: { state: CalcState; update: (patch: Partial<CalcState>) => void }) {
+  return (
+    <label className="flex items-start gap-3 cursor-pointer w-fit font-marcellus text-sm">
+      <input type="checkbox" checked={state.firstTime} onChange={(e) => update({ firstTime: e.target.checked })} className="w-4 h-4 mt-0.5" />
+      <span>
+        This is my first time booking with STR Cleaning Crew
+        <span className="block text-xs opacity-60">{Math.round(FIRST_TIME_DISCOUNT.percent * 100)}% off your first visit (not monthly plans or post-construction)</span>
+      </span>
+    </label>
   )
 }
 

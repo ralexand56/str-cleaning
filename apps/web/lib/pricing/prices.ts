@@ -234,6 +234,13 @@ export const POLICY_FEES = {
 }
 
 /**
+ * First-time client discount (Tatiana, Nov 19 2026): 20% off the first visit's clean price only,
+ * not add-ons, timing fees, STR monthly plans or post-construction. The client ticks a box; the
+ * team checks they really are new before confirming.
+ */
+export const FIRST_TIME_DISCOUNT = { percent: 0.2, label: 'First-time client, 20% off your first visit' }
+
+/**
  * Deposit at booking. Amounts confirmed by Tatiana (Nov 19 2026), but no deposit is charged yet:
  * keep `proposed` until charging at booking is built, so the site doesn't promise a deposit it doesn't take.
  */

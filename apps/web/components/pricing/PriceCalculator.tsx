@@ -13,7 +13,7 @@ import {
 } from '@/lib/pricing/calcState'
 import { AddOnTiles } from './AddOnTiles'
 import { QuoteSummary } from './QuoteSummary'
-import { ServiceInputs, ServiceTabs, TimingInputs, fieldLabel } from './ServiceInputs'
+import { FirstTimeToggle, ServiceInputs, ServiceTabs, TimingInputs, fieldLabel } from './ServiceInputs'
 
 /** Public price calculator (Pricing page). Choose service, size, package, add-ons; see a running total. */
 export function PriceCalculator({ initial }: { initial?: Partial<CalcState> }) {
@@ -40,9 +40,10 @@ export function PriceCalculator({ initial }: { initial?: Partial<CalcState> }) {
           </div>
         )}
         {showTiming && (
-          <div>
-            <span className={fieldLabel}>Timing</span>
+          <div className="flex flex-col gap-4">
+            <span className={fieldLabel}>Timing and discounts</span>
             <TimingInputs state={state} update={update} withSundayToggle />
+            <FirstTimeToggle state={state} update={update} />
           </div>
         )}
       </div>

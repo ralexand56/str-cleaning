@@ -9,6 +9,7 @@ import {
   STR_PACKAGES,
   STR_PLAN,
   STR_SIZES,
+  FIRST_TIME_DISCOUNT,
   TIMING_FEES,
   type AddOn,
   type StrPackage,
@@ -129,6 +130,10 @@ function timingLines(t?: TimingInput): QuoteLine[] {
   return lines
 }
 
+function firstTimeLine(base: number): QuoteLine {
+  return { label: FIRST_TIME_DISCOUNT.label, amount: -Math.round(base * FIRST_TIME_DISCOUNT.percent) }
+}
+
 function finish(partial: Omit<Quote, 'total' | 'usesProposed'>): Quote {
   return {
     ...partial,
@@ -182,6 +187,7 @@ function quoteStr(input: StrQuoteInput, opts?: QuoteOptions): Quote {
   }
 
   lines.push({ label: `${pkg.label}, ${size.label}`, amount: strPackagePrice(size, pkg), proposed })
+  if (input.firstTime) lines.push(firstTimeLine(strPackagePrice(size, pkg)))
   lines.push(...addOns, ...timingLines(input.timing))
 
   const notes: string[] = []
@@ -205,6 +211,7 @@ function quoteResidential(input: ResidentialQuoteInput, opts?: QuoteOptions): Qu
 
   if (pkg.key === 'recurring') {
     lines.push({ label: `First visit, deep clean (${home})`, amount: r5(std * pkg.multiplier) })
+    if (input.firstTime) lines.push(firstTimeLine(r5(std * pkg.multiplier)))
     lines.push(...addOnLines(input.addOns, 'residential', true, opts), ...timingLines(input.timing))
 
     const freq = visibleFrequencies(opts).find((f) => f.key === input.frequency)
@@ -235,6 +242,7 @@ function quoteResidential(input: ResidentialQuoteInput, opts?: QuoteOptions): Qu
   }
 
   lines.push({ label: `${pkg.label} (${home})`, amount: r5(std * pkg.multiplier) })
+  if (input.firstTime) lines.push(firstTimeLine(r5(std * pkg.multiplier)))
   lines.push(...addOnLines(input.addOns, 'residential', pkg.includesBundled, opts), ...timingLines(input.timing))
   return finish({ lines, period: 'visit', subs: [], notes: [], quoteRequired: false })
 }

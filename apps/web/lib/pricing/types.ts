@@ -26,6 +26,8 @@ export interface StrQuoteInput {
   sizeKey: string
   packageKey: StrPackageKey
   turnoversPerMonth?: number
+  /** First-time client: 20% off a single-visit package's price. Ignored for monthly plans. */
+  firstTime?: boolean
   prepay?: boolean
   addOns: SelectedAddOn[]
   timing?: TimingInput
@@ -38,6 +40,8 @@ export interface ResidentialQuoteInput {
   baths: number
   packageKey: ResidentialPackageKey
   frequency?: FrequencyKey
+  /** First-time client: 20% off the first visit's clean price. */
+  firstTime?: boolean
   addOns: SelectedAddOn[]
   timing?: TimingInput
 }

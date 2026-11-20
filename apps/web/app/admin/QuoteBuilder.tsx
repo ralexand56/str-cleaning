@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { AddOnTiles } from '@/components/pricing/AddOnTiles'
 import { QuoteSummary } from '@/components/pricing/QuoteSummary'
-import { ServiceInputs, ServiceTabs, TimingInputs } from '@/components/pricing/ServiceInputs'
+import { FirstTimeToggle, ServiceInputs, ServiceTabs, TimingInputs } from '@/components/pricing/ServiceInputs'
 import { ADD_ONS, POST_CONSTRUCTION_ITEMS } from '@/lib/pricing/prices'
 import { calculateQuote, describePackage, describeProperty } from '@/lib/pricing/engine'
 import { DEFAULT_CALC_STATE, bundledIncluded, isMonthlyPlan, toQuoteInput, type CalcState } from '@/lib/pricing/calcState'
@@ -80,6 +80,9 @@ export function QuoteBuilder({ onCreated }: { onCreated?: (jobId: string) => voi
           )}
           {calc.service !== 'post_construction' && !isMonthlyPlan(calc) && (
             <TimingInputs state={calc} update={update} withSundayToggle />
+          )}
+          {calc.service !== 'post_construction' && !isMonthlyPlan(calc) && (
+            <FirstTimeToggle state={calc} update={update} />
           )}
           <div className="grid grid-cols-2 gap-3">
             <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={field} />

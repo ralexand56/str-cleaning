@@ -56,6 +56,8 @@ export interface BookingIntake {
   products: 'ours' | 'theirs'
   productsToAvoid?: string
   heardAbout?: string
+  /** Ticked "first time booking with us" (20% off the first visit). The team checks it. */
+  firstTimeClient?: boolean
   /** The "started a booking" lead created at step 0, so the admin list can fold it into this request. */
   leadJobId?: string
 }
@@ -89,6 +91,7 @@ export function intakeLines(i: BookingIntake): [string, string][] {
     ['Products', i.products === 'theirs' ? 'Use the client’s own products' : 'Our professional products'],
     ['Products to avoid', i.productsToAvoid],
     ['Heard about us', i.heardAbout],
+    ['First-time client', i.firstTimeClient ? 'Yes, 20% off the first visit applied. Check they are new.' : undefined],
     ['Contact consent', i.contactConsent ? 'Yes' : 'No'],
   ]
   return rows.filter((r): r is [string, string] => !!r[1])
