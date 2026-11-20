@@ -1,7 +1,7 @@
 /**
  * Hardcoded US federal holiday list for the Sunday/Holiday surcharge.
  * The pricing spec leaves the holiday calendar as an open item — this is a v1 default,
- * covers 2026–2028, and should be extended by whoever maintains config.json in future years.
+ * covers 2026–2028, and should be extended each year (see prices.ts for everything else).
  */
 export const US_HOLIDAYS_2026_2028 = new Set<string>([
   // 2026

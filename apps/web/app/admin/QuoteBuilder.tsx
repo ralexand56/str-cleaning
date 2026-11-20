@@ -1,16 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { ADD_ONS } from '@/lib/pricing/addOns'
-import { SERVICES_BY_CATEGORY, SERVICE_LABELS, calculateEstimate, getSizeOptions } from '@/lib/pricing/engine'
-import type { PropertyCategory, SelectedAddOn, ServiceKey } from '@/lib/pricing/types'
+import { useMemo, useState } from 'react'
+import { AddOnTiles } from '@/components/pricing/AddOnTiles'
+import { QuoteSummary } from '@/components/pricing/QuoteSummary'
+import { FirstTimeToggle, ServiceInputs, ServiceTabs, TimingInputs } from '@/components/pricing/ServiceInputs'
+import { ADD_ONS, POST_CONSTRUCTION_ITEMS } from '@/lib/pricing/prices'
+import { calculateQuote, describePackage, describeProperty } from '@/lib/pricing/engine'
+import { DEFAULT_CALC_STATE, bundledIncluded, isMonthlyPlan, toQuoteInput, type CalcState } from '@/lib/pricing/calcState'
+import { packageKeyOf } from '@/lib/pricing/jobType'
 import { createManualJob } from '@/app/actions/admin/createManualJob'
 
+/** Admins always see proposed prices (tagged), so they can quote them by hand if Tatiana agrees. */
+const ADMIN_OPTIONS = { includeProposed: true }
+
 export function QuoteBuilder({ onCreated }: { onCreated?: (jobId: string) => void }) {
-  const [category, setCategory] = useState<PropertyCategory>('str')
-  const [serviceKey, setServiceKey] = useState<ServiceKey | ''>('')
-  const [sizeKey, setSizeKey] = useState('')
-  const [addOns, setAddOns] = useState<SelectedAddOn[]>([])
+  const [calc, setCalc] = useState<CalcState>(DEFAULT_CALC_STATE)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -18,35 +22,36 @@ export function QuoteBuilder({ onCreated }: { onCreated?: (jobId: string) => voi
   const [submitting, setSubmitting] = useState(false)
   const [createdId, setCreatedId] = useState('')
 
-  const effectiveServiceKey = category === 'str' ? (serviceKey as ServiceKey) : 'residential_first_visit'
-  const sizeOptions = effectiveServiceKey ? getSizeOptions(category, effectiveServiceKey) : []
-  const services = category === 'str' ? SERVICES_BY_CATEGORY.str : SERVICES_BY_CATEGORY.residential
-
-  const estimate = calculateEstimate({
-    category,
-    serviceKey: (category === 'str' ? serviceKey || 'str_turnover' : 'residential_first_visit') as ServiceKey,
-    sizeKey: sizeKey || null,
-    addOns,
-  })
-
-  function toggleAddOn(id: string) {
-    setAddOns((prev) => (prev.find((a) => a.id === id) ? prev.filter((a) => a.id !== id) : [...prev, { id, qty: 1 }]))
-  }
+  const update = (patch: Partial<CalcState>) => setCalc((prev) => ({ ...prev, ...patch }))
+  const input = useMemo(() => toQuoteInput(calc), [calc])
+  const quote = useMemo(() => calculateQuote(input, ADMIN_OPTIONS), [input])
 
   async function handleCreate() {
-    if (!sizeKey || !firstName || !lastName || !email) return
+    if (!firstName || !lastName || !email || !quote.lines.length) return
     setSubmitting(true)
     try {
+      const addOns =
+        input.service === 'post_construction'
+          ? POST_CONSTRUCTION_ITEMS.filter((i) => (input.counts[i.key] ?? 0) > 0).map((i) => ({
+              id: `pc_${i.key}`, qty: input.counts[i.key] ?? 0, label: i.label, unitPrice: i.price,
+            }))
+          : input.addOns.map((s) => {
+              const a = ADD_ONS.find((x) => x.id === s.id)
+              return { id: s.id, qty: s.qty, label: a?.name ?? s.id, unitPrice: a?.price ?? 0 }
+            })
       const id = await createManualJob({
-        category,
-        serviceKey: category === 'str' ? (serviceKey as string) : 'residential_first_visit',
-        propertySize: sizeKey,
+        service: calc.service,
+        packageKey: packageKeyOf(calc),
+        propertySize: `${describePackage(input)} · ${describeProperty(input)}`,
+        beds: calc.service === 'residential' ? calc.beds : undefined,
+        baths: calc.service === 'residential' ? calc.baths : undefined,
+        sqft: calc.service === 'residential' ? calc.sqft : calc.service === 'post_construction' ? calc.pcSqft : undefined,
         addOns,
         firstName,
         lastName,
         email,
         phone,
-        quotedTotal: estimate.subtotal,
+        quotedTotal: Math.round(quote.total),
       })
       setCreatedId(id)
       onCreated?.(id)
@@ -55,84 +60,53 @@ export function QuoteBuilder({ onCreated }: { onCreated?: (jobId: string) => voi
     }
   }
 
+  const field = 'font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2'
+
   return (
     <div className="flex flex-col gap-6 rounded-2xl border border-dark-brown/12 p-6">
       <p className="font-marcellus text-lg">Build a quote</p>
-
-      <div className="flex gap-3">
-        {(['str', 'residential'] as const).map((c) => (
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <div className="flex-1 min-w-0 flex flex-col gap-8">
+          <ServiceTabs value={calc.service} onChange={(service) => update({ service, addOns: [] })} />
+          <ServiceInputs state={calc} update={update} options={ADMIN_OPTIONS} />
+          {calc.service !== 'post_construction' && (
+            <AddOnTiles
+              service={calc.service}
+              selected={calc.addOns}
+              onChange={(addOns) => update({ addOns })}
+              bundledIncluded={bundledIncluded(calc)}
+              options={ADMIN_OPTIONS}
+            />
+          )}
+          {calc.service !== 'post_construction' && !isMonthlyPlan(calc) && (
+            <TimingInputs state={calc} update={update} withSundayToggle />
+          )}
+          {calc.service !== 'post_construction' && !isMonthlyPlan(calc) && (
+            <FirstTimeToggle state={calc} update={update} />
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={field} />
+            <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={field} />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={field} />
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className={field} />
+          </div>
           <button
-            key={c}
             type="button"
-            onClick={() => { setCategory(c); setServiceKey(''); setSizeKey('') }}
-            className={`px-5 py-2 rounded-full border font-marcellus text-sm cursor-pointer transition-colors ${category === c ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/20 hover:border-dark-brown/50'}`}
+            onClick={handleCreate}
+            disabled={submitting || !quote.lines.length || !firstName || !lastName || !email}
+            className="self-start px-8 py-3 rounded-full bg-accent text-dark-brown font-marcellus text-sm disabled:opacity-50 cursor-pointer"
           >
-            {c === 'str' ? 'STR' : 'Residential'}
+            {submitting ? 'Creating…' : 'Create job'}
           </button>
-        ))}
-      </div>
-
-      {category === 'str' && (
-        <div className="flex flex-wrap gap-2">
-          {services.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => { setServiceKey(key); setSizeKey('') }}
-              className={`px-4 py-2 rounded-full border font-marcellus text-xs cursor-pointer transition-colors ${serviceKey === key ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/20 hover:border-dark-brown/50'}`}
-            >
-              {SERVICE_LABELS[key]}
-            </button>
-          ))}
+          {createdId && <p className="font-marcellus text-sm opacity-50">Created job {createdId}.</p>}
         </div>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {sizeOptions.map((opt) => (
-          <button
-            key={opt.key}
-            type="button"
-            onClick={() => setSizeKey(opt.key)}
-            className={`px-4 py-2 rounded-full border font-marcellus text-xs cursor-pointer transition-colors ${sizeKey === opt.key ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/20 hover:border-dark-brown/50'}`}
-          >
-            {opt.label}{opt.price !== null ? ` — $${opt.price}` : ''}
-          </button>
-        ))}
+        <div className="w-full lg:w-[320px] flex-shrink-0 lg:sticky lg:top-8">
+          <QuoteSummary quote={quote} title="Quote" />
+          {quote.usesProposed && (
+            <p className="font-sans text-xs text-amber-800 mt-3">This quote uses a proposed price that isn’t confirmed yet.</p>
+          )}
+        </div>
       </div>
-
-      <div className="flex flex-wrap gap-2">
-        {ADD_ONS.map((a) => (
-          <button
-            key={a.id}
-            type="button"
-            onClick={() => toggleAddOn(a.id)}
-            className={`px-3 py-1.5 rounded-full border font-marcellus text-xs cursor-pointer transition-colors ${addOns.find((s) => s.id === a.id) ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/20 hover:border-dark-brown/50'}`}
-          >
-            {a.name} (${a.price})
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2" />
-        <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className="font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2" />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2" />
-        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="font-marcellus text-sm bg-transparent border-b border-dark-brown/25 pb-2" />
-      </div>
-
-      <p className="font-marcellus text-base">
-        Estimate: {estimate.contactForQuote ? 'Custom quote' : `$${estimate.subtotal.toLocaleString()}`}
-      </p>
-
-      <button
-        type="button"
-        onClick={handleCreate}
-        disabled={submitting || !sizeKey || !firstName || !lastName || !email}
-        className="self-start px-8 py-3 rounded-full bg-accent text-dark-brown font-marcellus text-sm disabled:opacity-50 cursor-pointer"
-      >
-        {submitting ? 'Creating…' : 'Create job'}
-      </button>
-      {createdId && <p className="font-marcellus text-sm opacity-50">Created job {createdId}.</p>}
     </div>
   )
 }

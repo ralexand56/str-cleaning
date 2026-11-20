@@ -11,6 +11,7 @@ import { MessageThread, type ThreadMessage } from '@/components/jobs/MessageThre
 import { AddNoteForm, type JobNoteItem } from '@/components/jobs/AddNoteForm'
 import { humanize } from '@/lib/format'
 import { ChargeCustomerModal } from './ChargeCustomerModal'
+import { JobIntake } from './JobIntake'
 
 type Charge = Schema['Charge']['type']
 type JobAssignment = Schema['JobAssignment']['type']
@@ -102,6 +103,9 @@ export function JobDetail({ job, workers, onChanged }: {
           </p>
         )}
       </div>
+
+      <JobIntake intake={job.intake} addOns={job.addOns} photoKeys={job.photoKeys} notes={job.notes} />
+      {job.rawMessage && <p className="font-marcellus text-sm opacity-60">{job.rawMessage}</p>}
 
       <div>
         <p className="font-marcellus text-xs opacity-40 uppercase tracking-wider mb-2">Status</p>

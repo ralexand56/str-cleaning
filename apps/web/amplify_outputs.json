@@ -614,6 +614,21 @@
               "isRequired": false,
               "attributes": []
             },
+            "intake": {
+              "name": "intake",
+              "isArray": false,
+              "type": "AWSJSON",
+              "isRequired": false,
+              "attributes": []
+            },
+            "photoKeys": {
+              "name": "photoKeys",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
             "rawMessage": {
               "name": "rawMessage",
               "isArray": false,
@@ -1521,6 +1536,19 @@
               "get",
               "list",
               "write",
+              "delete"
+            ]
+          },
+          "booking-photos/*": {
+            "guest": [
+              "write"
+            ],
+            "authenticated": [
+              "write"
+            ],
+            "groupsAdmins": [
+              "get",
+              "list",
               "delete"
             ]
           },

@@ -91,6 +91,11 @@ const schema = a.schema({
       actualTotal: a.integer(),
 
       notes: a.string(), // customer's own free-text notes at booking time
+      // Booking intake answers (home type, pets, STR/post-construction details, checklist, preferred
+      // date windows, access, products, how they heard, leadJobId). Shape: BookingIntake in
+      // lib/booking/intake.ts.
+      intake: a.json(),
+      photoKeys: a.string().array(), // S3 keys under booking-photos/ uploaded with the request
       rawMessage: a.string(), // CONTACT_INQUIRY message body
 
       assignments: a.hasMany('JobAssignment', 'jobId'),
