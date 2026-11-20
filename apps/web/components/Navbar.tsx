@@ -13,12 +13,13 @@ const NAV_LINKS = [
   { label: 'Home',        href: '/' },
   { label: 'Services',    href: '/services' },
   { label: 'Residential', href: '/residential' },
+  { label: 'Pricing',     href: '/pricing' },
   { label: 'Portfolio',   href: '/portfolio' },
   { label: 'Contact',     href: '/contact' },
   { label: 'About',       href: '/about' },
 ]
 
-const LIGHT_BG_PAGES = ['/about', '/contact', '/book', '/services', '/business', '/portfolio', '/residential', '/account']
+const LIGHT_BG_PAGES = ['/about', '/contact', '/book', '/services', '/business', '/portfolio', '/residential', '/account', '/pricing']
 
 function NavLink({ label, href, active }: { label: string; href: string; active: boolean }) {
   return (

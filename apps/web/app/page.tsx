@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { HeroSection } from '@/components/HeroSection'
 import { ContactForm } from '@/components/ContactForm'
-import { AppointmentScheduler } from '@/components/AppointmentScheduler'
+import { BookingStartPanel } from '@/components/booking/BookingStartPanel'
 
 const SOCIAL_IMAGES = [
   { src: '/images/imgg-od3-579qcx59.webp', alt: 'Mop' },
@@ -106,7 +106,7 @@ export default function HomePage() {
 
         {/* Booking widget panel */}
         <div className="flex flex-col justify-center px-12 py-20 max-lg:px-8 max-lg:py-14">
-          <AppointmentScheduler />
+          <BookingStartPanel />
         </div>
         </div>
       </section>

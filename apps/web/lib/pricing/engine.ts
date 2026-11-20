@@ -1,243 +1,316 @@
-import raw from './config.json'
-import { ADD_ONS } from './addOns'
+import {
+  ADD_ONS,
+  FREQUENCIES,
+  POST_CONSTRUCTION_ITEMS,
+  POST_CONSTRUCTION_MINIMUM,
+  POST_CONSTRUCTION_PASSES,
+  RESIDENTIAL,
+  RESIDENTIAL_PACKAGES,
+  STR_PACKAGES,
+  STR_PLAN,
+  STR_SIZES,
+  TIMING_FEES,
+  type AddOn,
+  type StrPackage,
+  type StrSize,
+} from './prices'
 import { isHolidayOrSunday } from './holidays'
+import { SHOW_PROPOSED } from './visibility'
 import type {
-  EstimateInput,
-  EstimateResult,
-  Frequency,
-  PricingConfig,
-  PropertyCategory,
-  ServiceKey,
-  SizeOption,
+  PostConstructionQuoteInput,
+  Quote,
+  QuoteInput,
+  QuoteLine,
+  QuoteOptions,
+  ResidentialQuoteInput,
+  SelectedAddOn,
+  ServiceType,
+  StrQuoteInput,
+  TimingInput,
 } from './types'
 
-const config = (raw as unknown as PricingConfig).calculator_config
+/** Round to the nearest $5. */
+export const r5 = (n: number) => Math.round(n / 5) * 5
 
-export const DISPLAY = config.display
-
-export function roundToStep(n: number, step: number = config.display.round_to): number {
-  return Math.round(n / step) * step
+export function formatMoney(n: number): string {
+  const sign = n < 0 ? '−' : ''
+  return `${sign}$${Math.round(Math.abs(n)).toLocaleString('en-US')}`
 }
 
-export function priceRange(n: number, pct: number = config.display.range_percent): { low: number; high: number } {
-  return {
-    low: roundToStep(n * (1 - pct)),
-    high: roundToStep(n * (1 + pct)),
-  }
+const showProposed = (opts?: QuoteOptions) => opts?.includeProposed ?? SHOW_PROPOSED
+
+// ─── What's visible ──────────────────────────────────────────────────────────
+
+export function visibleStrPackages(opts?: QuoteOptions): StrPackage[] {
+  return STR_PACKAGES.filter((p) => !p.proposed || showProposed(opts))
 }
 
-/** Every service, mapped to the human label used in the booking form. */
-export const SERVICE_LABELS: Record<ServiceKey, string> = {
-  str_turnover: 'Regular Turnover',
-  str_deep: 'Deep Cleaning',
-  str_seasonal: 'Seasonal Cleaning',
-  str_startup: 'StartUp Service',
-  str_subscription_standard: 'Standard Subscription',
-  str_subscription_premium: 'Premium Care',
-  residential_first_visit: 'First-Visit Deep Clean',
-  residential_recurring: 'Recurring Cleaning',
-  move_in_out: 'Move-In / Move-Out',
-  post_construction: 'Post-Construction',
+export function visibleFrequencies(opts?: QuoteOptions) {
+  return FREQUENCIES.filter((f) => !f.proposed || showProposed(opts))
 }
 
-export const SERVICES_BY_CATEGORY: Record<PropertyCategory, ServiceKey[]> = {
-  str: ['str_turnover', 'str_deep', 'str_seasonal', 'str_startup', 'str_subscription_standard', 'str_subscription_premium'],
-  residential: ['residential_first_visit', 'residential_recurring'],
+export function visibleAddOns(service: ServiceType, opts?: QuoteOptions): AddOn[] {
+  if (service === 'post_construction') return []
+  return ADD_ONS.filter(
+    (a) =>
+      (!a.proposed || showProposed(opts)) &&
+      !(a.residentialOnly && service !== 'residential') &&
+      !(a.strOnly && service !== 'str'),
+  )
 }
 
-/** Returns the selectable size rows (and their flat price) for a given category + service. */
-export function getSizeOptions(category: PropertyCategory, serviceKey: ServiceKey): SizeOption[] {
-  switch (serviceKey) {
-    case 'str_turnover':
-      return config.property_type_mapping.str_turnover_types.map((row) => ({
-        key: row.key,
-        label: row.label,
-        sqftMin: row.sqft_min,
-        sqftMax: row.sqft_max,
-        price: config.str_turnover_per_clean[row.key] ?? null,
-      }))
-    case 'str_seasonal':
-      return config.property_type_mapping.str_turnover_types.map((row) => ({
-        key: row.key,
-        label: row.label,
-        sqftMin: row.sqft_min,
-        sqftMax: row.sqft_max,
-        price: config.seasonal_per_service[row.key] ?? null,
-      }))
-    case 'str_subscription_standard':
-      return config.str_subscription.sizes.map((row) => ({
-        key: row.key,
-        label: row.label,
-        sqftMin: config.property_type_mapping.str_turnover_types.find((t) => t.key === row.key)?.sqft_min ?? 0,
-        sqftMax: config.property_type_mapping.str_turnover_types.find((t) => t.key === row.key)?.sqft_max ?? 0,
-        price: row.standard,
-      }))
-    case 'str_subscription_premium':
-      return config.str_subscription.sizes.map((row) => ({
-        key: row.key,
-        label: row.label,
-        sqftMin: config.property_type_mapping.str_turnover_types.find((t) => t.key === row.key)?.sqft_min ?? 0,
-        sqftMax: config.property_type_mapping.str_turnover_types.find((t) => t.key === row.key)?.sqft_max ?? 0,
-        price: row.premium_care,
-      }))
-    case 'str_deep':
-      return config.deep_clean_per_service.rows.map((row, i) => ({
-        key: row.key ?? `deep_${i}`,
-        label: row.label,
-        sqftMin: row.sqft_min,
-        sqftMax: row.sqft_max,
-        price: row.price ?? null,
-      }))
-    case 'str_startup':
-      return [
-        { key: 'le2000', label: 'Up to 2,000 sqft', sqftMin: 0, sqftMax: 2000, price: config.str_startup_onboarding.base_le_2000_sqft },
-        { key: 'gt2000', label: '2,000–3,500 sqft', sqftMin: 2000, sqftMax: 3500, price: config.str_startup_onboarding.base_gt_2000_sqft },
-      ]
-    case 'residential_first_visit':
-    case 'residential_recurring':
-      return config.residential.first_visit_deep_clean.rows.map((row) => ({
-        key: row.key,
-        label: row.label,
-        sqftMin: row.sqft_min,
-        sqftMax: row.sqft_max,
-        price:
-          serviceKey === 'residential_first_visit'
-            ? row.price
-            : null, // recurring's displayed price depends on frequency — resolved in calculateEstimate
-      }))
-    case 'move_in_out':
-      return config.move_in_out.rows.map((row, i) => ({
-        key: row.key ?? `mio_${i}`,
-        label: row.label,
-        sqftMin: row.sqft_min,
-        sqftMax: row.sqft_max,
-        price: row.price ?? null,
-      }))
-    case 'post_construction':
-      return config.post_construction.rows.map((row, i) => ({
-        key: row.key ?? `pc_${i}`,
-        label: row.label,
-        sqftMin: row.sqft_min,
-        sqftMax: row.sqft_max,
-        price: row.price ?? null,
-      }))
-    default:
-      return []
-  }
+export function visiblePostConstructionItems(opts?: QuoteOptions) {
+  return POST_CONSTRUCTION_ITEMS.filter((i) => !i.proposed || showProposed(opts))
 }
 
-/** Finds the nearest size row for a given sqft value, if any row's range contains it. */
-export function mapSqftToSizeKey(category: PropertyCategory, serviceKey: ServiceKey, sqft: number): string | null {
-  const options = getSizeOptions(category, serviceKey)
-  const match = options.find((o) => sqft >= o.sqftMin && sqft <= o.sqftMax)
-  return match?.key ?? null
+export function getStrSize(key: string): StrSize | undefined {
+  return STR_SIZES.find((s) => s.key === key)
 }
 
-function frequencyToRecurringKey(freq?: Frequency): 'weekly' | 'biweekly' | 'monthly' {
-  switch (freq) {
-    case 'Weekly':
-      return 'weekly'
-    case 'Bi-weekly':
-      return 'biweekly'
-    case 'Monthly':
-      return 'monthly'
-    default:
-      return 'monthly'
-  }
+export function strPackagePrice(size: StrSize, pkg: StrPackage): number {
+  return size[pkg.priceField]
 }
 
-function frequencyToMonthlyCostKey(freq?: Frequency): 'weekly_4x' | 'biweekly_2x' | 'monthly_1x' {
-  switch (freq) {
-    case 'Weekly':
-      return 'weekly_4x'
-    case 'Bi-weekly':
-      return 'biweekly_2x'
-    case 'Monthly':
-      return 'monthly_1x'
-    default:
-      return 'monthly_1x'
-  }
+/** The long-stay price for a size is shown only if long-stay itself and that size's price are public. */
+export function isStrPriceProposed(size: StrSize, pkg: StrPackage): boolean {
+  return !!pkg.proposed || (pkg.key === 'long_stay' && !!size.longStayProposed)
 }
 
-function resolveBase(input: EstimateInput): { base: number | null; sizeLabel: string | null } {
-  const { category, serviceKey, sizeKey, frequency } = input
-  const options = getSizeOptions(category, serviceKey)
-  const row = options.find((o) => o.key === sizeKey)
-  if (!row) return { base: null, sizeLabel: null }
-
-  if (serviceKey === 'residential_recurring') {
-    const monthlyRow = config.residential.monthly_cost_to_client.rows.find((r) => r.key === sizeKey)
-    const base = monthlyRow ? monthlyRow[frequencyToMonthlyCostKey(frequency)] : null
-    return { base, sizeLabel: row.label }
-  }
-
-  return { base: row.price, sizeLabel: row.label }
+/** Residential standard price before rounding: $50 + $0.09/sq ft + $25/bedroom + $40/bathroom. */
+export function residentialStandard(sqft: number, beds: number, baths: number): number {
+  return RESIDENTIAL.base + RESIDENTIAL.perSqft * sqft + RESIDENTIAL.perBedroom * beds + RESIDENTIAL.perBathroom * baths
 }
 
-export function calcAddOnsTotal(selected: EstimateInput['addOns']): number {
-  return selected.reduce((sum, sel) => {
-    const item = ADD_ONS.find((a) => a.id === sel.id)
-    if (!item) return sum
-    const qty = item.qtyRange ? Math.max(sel.qty, 1) : 1
-    return sum + item.price * qty
-  }, 0)
+export function residentialPackagePrice(sqft: number, beds: number, baths: number, multiplier: number): number {
+  return r5(residentialStandard(sqft, beds, baths) * multiplier)
 }
 
-export function applySurcharges(opts: {
-  emergencySameDay?: boolean
-  serviceDate?: string
-}): { total: number; breakdown: { label: string; amount: number }[] } {
-  const breakdown: { label: string; amount: number }[] = []
-  if (opts.emergencySameDay) {
-    breakdown.push({ label: config.surcharges.emergency_sameday.label, amount: config.surcharges.emergency_sameday.amount })
-  }
-  if (opts.serviceDate && isHolidayOrSunday(opts.serviceDate)) {
-    breakdown.push({ label: config.surcharges.sunday_holiday.label, amount: config.surcharges.sunday_holiday.amount })
-  }
-  return { total: breakdown.reduce((s, b) => s + b.amount, 0), breakdown }
+export function addOnUnitLabel(a: AddOn): string {
+  return `${formatMoney(a.price)} ${a.unit}`
 }
 
-export function calculateEstimate(input: EstimateInput): EstimateResult {
-  const { base, sizeLabel } = resolveBase(input)
-  const addOnsTotal = calcAddOnsTotal(input.addOns)
-  const { total: surcharge, breakdown: surchargeBreakdown } = applySurcharges(input)
+// ─── Building blocks ─────────────────────────────────────────────────────────
 
-  if (base === null) {
-    return {
-      sizeLabel,
-      base: null,
-      addOnsTotal,
-      surcharge,
-      surchargeBreakdown,
-      subtotal: 0,
-      range: null,
-      contactForQuote: true,
+function addOnQty(a: AddOn, qty: number): number {
+  return a.perItem ? Math.max(a.min ?? 1, qty || 1) : 1
+}
+
+function addOnLines(
+  selected: SelectedAddOn[],
+  service: ServiceType,
+  bundledIncluded: boolean,
+  opts?: QuoteOptions,
+): QuoteLine[] {
+  const allowed = new Set(visibleAddOns(service, opts).map((a) => a.id))
+  const lines: QuoteLine[] = []
+  for (const sel of selected) {
+    const a = ADD_ONS.find((x) => x.id === sel.id)
+    if (!a || !allowed.has(a.id)) continue
+    if (bundledIncluded && a.bundled) {
+      lines.push({ label: a.name, amount: 0, included: true })
+      continue
     }
+    const q = addOnQty(a, sel.qty)
+    lines.push({
+      label: a.perItem ? `${a.name} × ${q}` : a.name,
+      amount: a.price * q,
+      proposed: a.proposed,
+    })
   }
+  return lines
+}
 
-  const subtotal = base + addOnsTotal + surcharge
-  const range = config.display.show_range ? priceRange(subtotal) : null
+function timingLines(t?: TimingInput): QuoteLine[] {
+  if (!t) return []
+  const lines: QuoteLine[] = []
+  if (t.sameDay) lines.push({ label: TIMING_FEES.sameDay.label, amount: TIMING_FEES.sameDay.amount })
+  if (t.sundayHoliday || (t.date && isHolidayOrSunday(t.date))) {
+    lines.push({ label: TIMING_FEES.sundayHoliday.label, amount: TIMING_FEES.sundayHoliday.amount })
+  }
+  return lines
+}
 
+function finish(partial: Omit<Quote, 'total' | 'usesProposed'>): Quote {
   return {
-    sizeLabel,
-    base,
-    addOnsTotal,
-    surcharge,
-    surchargeBreakdown,
-    subtotal,
-    range,
-    contactForQuote: false,
+    ...partial,
+    total: partial.lines.reduce((s, l) => s + l.amount, 0),
+    usesProposed: partial.lines.some((l) => l.proposed),
   }
 }
 
-/** "Starting at $X" — uses the smallest size's price for a given service. */
-export function startingAtPrice(category: PropertyCategory, serviceKey: ServiceKey, frequency?: Frequency): number | null {
-  const options = getSizeOptions(category, serviceKey)
-  if (options.length === 0) return null
-  const smallest = options[0]
-  if (serviceKey === 'residential_recurring') {
-    const monthlyRow = config.residential.monthly_cost_to_client.rows.find((r) => r.key === smallest.key)
-    return monthlyRow ? monthlyRow[frequencyToMonthlyCostKey(frequency)] : null
+function unavailable(reason: string, period: Quote['period'] = 'visit'): Quote {
+  return { lines: [], total: 0, period, subs: [], notes: [], quoteRequired: true, quoteReason: reason, usesProposed: false }
+}
+
+// ─── Quotes ──────────────────────────────────────────────────────────────────
+
+function quoteStr(input: StrQuoteInput, opts?: QuoteOptions): Quote {
+  const size = getStrSize(input.sizeKey)
+  const pkg = STR_PACKAGES.find((p) => p.key === input.packageKey)
+  if (!size || !pkg) return unavailable('Choose a property size and package.')
+  const proposed = isStrPriceProposed(size, pkg)
+  if (proposed && !showProposed(opts)) return unavailable('We’ll quote this package for you.')
+
+  const lines: QuoteLine[] = []
+  const addOns = addOnLines(input.addOns, 'str', false, opts)
+
+  if (pkg.monthly) {
+    lines.push({
+      label: `${pkg.key === 'plan_standard' ? 'Standard' : 'Premium Care'} plan, ${STR_PLAN.includedTurnovers} turnovers`,
+      amount: strPackagePrice(size, pkg),
+    })
+    const turns = Math.max(STR_PLAN.includedTurnovers, input.turnoversPerMonth ?? STR_PLAN.includedTurnovers)
+    const extra = turns - STR_PLAN.includedTurnovers
+    if (extra > 0) {
+      lines.push({
+        label: `${extra} extra turnover${extra > 1 ? 's' : ''} × ${formatMoney(size.extraTurnover)}`,
+        amount: extra * size.extraTurnover,
+      })
+    }
+    if (input.prepay) {
+      const sub = lines.reduce((s, l) => s + l.amount, 0)
+      lines.push({ label: 'Prepaid quarterly or yearly, 10% off', amount: -Math.round(sub * STR_PLAN.prepayDiscount) })
+    }
+    const planTotal = lines.reduce((s, l) => s + l.amount, 0)
+    lines.push(...addOns)
+    return finish({
+      lines,
+      period: 'month',
+      subs: [{ label: 'Average per turnover', amount: Math.round(planTotal / turns) }],
+      notes: [`Monthly price. ${STR_PLAN.terms}`],
+      quoteRequired: false,
+    })
   }
-  return smallest.price
+
+  lines.push({ label: `${pkg.label}, ${size.label}`, amount: strPackagePrice(size, pkg), proposed })
+  lines.push(...addOns, ...timingLines(input.timing))
+
+  const notes: string[] = []
+  if (pkg.key === 'turnover') notes.push('Booking 5 or more turnovers a month? A monthly plan locks this rate and adds reporting.')
+  if (pkg.key === 'seasonal') notes.push('Best in the slow months: September–October and January–February. Premium Care includes one a year.')
+  if (pkg.key === 'long_stay') notes.push('For stays of 7 nights or more.')
+
+  return finish({ lines, period: 'visit', subs: [], notes, quoteRequired: false })
+}
+
+function quoteResidential(input: ResidentialQuoteInput, opts?: QuoteOptions): Quote {
+  const pkg = RESIDENTIAL_PACKAGES.find((p) => p.key === input.packageKey)
+  if (!pkg) return unavailable('Choose a package.')
+  if (!input.sqft || input.sqft <= 0) return unavailable('Enter the home’s square feet.')
+  if (input.sqft > RESIDENTIAL.maxInstantSqft) {
+    return unavailable(`Homes over ${RESIDENTIAL.maxInstantSqft.toLocaleString()} sq ft get a custom quote. Send a request and we’ll price it for you.`)
+  }
+
+  const std = residentialStandard(input.sqft, input.beds, input.baths)
+  const lines: QuoteLine[] = []
+  const home = `${input.sqft.toLocaleString()} sq ft, ${input.beds} bd / ${input.baths} ba`
+
+  if (pkg.key === 'recurring') {
+    lines.push({ label: `First visit, deep clean (${home})`, amount: r5(std * pkg.multiplier) })
+    lines.push(...addOnLines(input.addOns, 'residential', true, opts), ...timingLines(input.timing))
+
+    const freq = visibleFrequencies(opts).find((f) => f.key === input.frequency)
+    const freqLabel = FREQUENCIES.find((f) => f.key === input.frequency)?.label.toLowerCase() ?? 'recurring'
+    if (!freq) {
+      return finish({
+        lines,
+        period: 'visit',
+        subs: [{ label: `Then per visit, ${freqLabel}`, amount: null }],
+        notes: ['The first visit is a deep clean. We’ll confirm your recurring per-visit rate with you before your first clean. Add-ons on later visits are billed when done.'],
+        quoteRequired: false,
+      })
+    }
+    const visit = r5(std * (1 - freq.discount))
+    const q = finish({
+      lines,
+      period: 'visit',
+      subs: [
+        { label: `Then per visit, ${freq.label.toLowerCase()}`, amount: visit },
+        { label: 'About per month', amount: Math.round(visit * freq.visitsPerMonth) },
+      ],
+      notes: [
+        `${freq.label} visits are ${Math.round(freq.discount * 100)}% off a one-time standard clean (${formatMoney(r5(std))}). Add-ons on later visits are billed when done.`,
+      ],
+      quoteRequired: false,
+    })
+    return { ...q, usesProposed: q.usesProposed || !!freq.proposed }
+  }
+
+  lines.push({ label: `${pkg.label} (${home})`, amount: r5(std * pkg.multiplier) })
+  lines.push(...addOnLines(input.addOns, 'residential', pkg.includesBundled, opts), ...timingLines(input.timing))
+  return finish({ lines, period: 'visit', subs: [], notes: [], quoteRequired: false })
+}
+
+function quotePostConstruction(input: PostConstructionQuoteInput, opts?: QuoteOptions): Quote {
+  const pass = POST_CONSTRUCTION_PASSES.find((p) => p.key === input.pass)
+  if (!pass) return unavailable('Choose a clean.')
+  if (!input.sqft || input.sqft <= 0) return unavailable('Enter the site’s square feet.')
+
+  const lines: QuoteLine[] = []
+  const base = input.sqft * pass.rate
+  lines.push({ label: `${pass.label}, ${input.sqft.toLocaleString()} sq ft × $${pass.rate.toFixed(2)}`, amount: base })
+  if (showProposed(opts) && base < POST_CONSTRUCTION_MINIMUM.amount) {
+    lines.push({ label: 'Job minimum', amount: POST_CONSTRUCTION_MINIMUM.amount - base, proposed: POST_CONSTRUCTION_MINIMUM.proposed })
+  }
+  for (const item of visiblePostConstructionItems(opts)) {
+    const n = Math.max(0, Math.floor(input.counts[item.key] ?? 0))
+    if (n > 0) lines.push({ label: `${item.label}, ${n} × ${formatMoney(item.price)}`, amount: n * item.price, proposed: item.proposed })
+  }
+
+  return finish({
+    lines,
+    period: 'visit',
+    subs: [],
+    notes: [
+      'Windows are priced per window, on top of the sq ft price. If builders are still working and an area needs another pass, the extra pass is quoted separately.',
+    ],
+    quoteRequired: true,
+    quoteReason: 'Post-construction jobs are confirmed after we review the site. This is an estimate.',
+  })
+}
+
+export function calculateQuote(input: QuoteInput, opts?: QuoteOptions): Quote {
+  switch (input.service) {
+    case 'str':
+      return quoteStr(input, opts)
+    case 'residential':
+      return quoteResidential(input, opts)
+    case 'post_construction':
+      return quotePostConstruction(input, opts)
+  }
+}
+
+// ─── Labels for requests and emails ──────────────────────────────────────────
+
+export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
+  str: 'Short-term rental',
+  residential: 'Residential',
+  post_construction: 'Post-construction',
+}
+
+export function describePackage(input: QuoteInput): string {
+  switch (input.service) {
+    case 'str':
+      return STR_PACKAGES.find((p) => p.key === input.packageKey)?.label ?? input.packageKey
+    case 'residential': {
+      const pkg = RESIDENTIAL_PACKAGES.find((p) => p.key === input.packageKey)?.label ?? input.packageKey
+      const freq = input.packageKey === 'recurring' ? FREQUENCIES.find((f) => f.key === input.frequency)?.label : undefined
+      return freq ? `${pkg}, ${freq.toLowerCase()}` : pkg
+    }
+    case 'post_construction':
+      return POST_CONSTRUCTION_PASSES.find((p) => p.key === input.pass)?.label ?? input.pass
+  }
+}
+
+export function describeProperty(input: QuoteInput): string {
+  switch (input.service) {
+    case 'str': {
+      const s = getStrSize(input.sizeKey)
+      return s ? `${s.label} (${s.sqft})` : input.sizeKey
+    }
+    case 'residential':
+      return `${input.sqft.toLocaleString()} sq ft · ${input.beds} bd / ${input.baths} ba`
+    case 'post_construction':
+      return `${input.sqft.toLocaleString()} sq ft`
+  }
 }

@@ -37,6 +37,18 @@ export function JobsTab() {
 
   const selected = jobs.find((j) => j.id === selectedId) ?? null
 
+  // A visitor who finishes booking leaves two jobs: the step-0 lead and the full request, which
+  // records the lead's id. Hide leads that turned into a request.
+  const finishedLeadIds = new Set(
+    jobs
+      .map((j) => {
+        const raw = typeof j.intake === 'string' ? (() => { try { return JSON.parse(j.intake) } catch { return null } })() : j.intake
+        return (raw as { leadJobId?: string } | null)?.leadJobId
+      })
+      .filter(Boolean),
+  )
+  const visibleJobs = jobs.filter((j) => !finishedLeadIds.has(j.id))
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -75,8 +87,8 @@ export function JobsTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
         <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
-          {jobs.length === 0 && <p className="font-marcellus text-sm opacity-40">No jobs.</p>}
-          {jobs.map((job) => (
+          {visibleJobs.length === 0 && <p className="font-marcellus text-sm opacity-40">No jobs.</p>}
+          {visibleJobs.map((job) => (
             <button
               key={job.id}
               type="button"

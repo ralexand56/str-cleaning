@@ -2,26 +2,17 @@
 
 import { requireGroup } from '@/lib/authGroups'
 import { serverDataClient } from '@/lib/data/serverClient'
-import type { SelectedAddOn } from '@/lib/pricing/types'
-
-const SERVICE_KEY_TO_JOB_TYPE: Record<string, string> = {
-  str_turnover: 'STR_TURNOVER',
-  str_deep: 'STR_DEEP',
-  str_seasonal: 'STR_SEASONAL',
-  str_startup: 'STR_STARTUP',
-  str_subscription_standard: 'STR_SUBSCRIPTION_STANDARD',
-  str_subscription_premium: 'STR_SUBSCRIPTION_PREMIUM',
-  residential_first_visit: 'RESIDENTIAL_FIRST_VISIT',
-  residential_recurring: 'RESIDENTIAL_RECURRING',
-  move_in_out: 'MOVE_IN_OUT',
-  post_construction: 'POST_CONSTRUCTION',
-}
+import { jobTypeFor } from '@/lib/pricing/jobType'
+import type { ServiceType } from '@/lib/pricing/types'
 
 export async function createManualJob(input: {
-  category: 'str' | 'residential'
-  serviceKey: string
+  service: ServiceType
+  packageKey: string
   propertySize: string
-  addOns: SelectedAddOn[]
+  beds?: number
+  baths?: number
+  sqft?: number
+  addOns: { id: string; qty: number; label: string; unitPrice: number }[]
   firstName: string
   lastName: string
   email: string
@@ -36,15 +27,18 @@ export async function createManualJob(input: {
   await requireGroup('Admins')
 
   const created = await serverDataClient.models.Job.create({
-    type: (SERVICE_KEY_TO_JOB_TYPE[input.serviceKey] ?? 'STR_TURNOVER') as never,
+    type: jobTypeFor(input.service, input.packageKey) as never,
     source: 'ADMIN_MANUAL',
     status: 'QUOTED',
-    category: input.category === 'residential' ? 'RESIDENTIAL' : 'STR',
+    category: input.service === 'str' ? 'STR' : 'RESIDENTIAL',
     firstName: input.firstName,
     lastName: input.lastName,
     email: input.email,
     phone: input.phone,
     propertySize: input.propertySize,
+    beds: input.beds,
+    baths: input.baths,
+    sqft: input.sqft,
     address: input.address,
     city: input.city,
     state: input.state,
