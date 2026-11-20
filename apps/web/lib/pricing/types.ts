@@ -75,6 +75,8 @@ export interface Quote {
   /** True when an instant price isn't offered: the team sends a quote. */
   quoteRequired: boolean
   quoteReason?: string
+  /** The visitor hasn't given enough to price it yet (e.g. no size chosen). Not a custom quote. */
+  incomplete?: boolean
   /** True when any line uses a proposed price (only possible with includeProposed). */
   usesProposed: boolean
 }

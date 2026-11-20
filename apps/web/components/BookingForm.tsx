@@ -17,7 +17,7 @@ import {
   TimingInputs,
   hasFrequencyChoice,
 } from '@/components/pricing/ServiceInputs'
-import { ADD_ONS, CARD_POLICY, FREQUENCIES, POST_CONSTRUCTION_ITEMS } from '@/lib/pricing/prices'
+import { ADD_ONS, CARD_POLICY, FIRST_TIME_DISCOUNT, FREQUENCIES, POST_CONSTRUCTION_ITEMS } from '@/lib/pricing/prices'
 import {
   SERVICE_TYPE_LABELS,
   calculateQuote,
@@ -107,6 +107,50 @@ function isStepValid(step: StepId, calc: CalcState, c: Contact, intake: BookingI
     default:
       return true
   }
+}
+
+/** What's still needed on a step, shown under a disabled Continue button. */
+function missingFor(step: StepId, calc: CalcState, c: Contact, intake: BookingIntake): string {
+  const need: string[] = []
+  switch (step) {
+    case 'contact':
+      if (!c.firstName.trim()) need.push('your first name')
+      if (c.phone.replace(/\D/g, '').length < 10) need.push('a phone number')
+      if (!EMAIL_RE.test(c.email.trim())) need.push('an email address')
+      if (!/^\d{5}$/.test(c.zip.trim())) need.push('a 5-digit ZIP code')
+      if (!intake.contactConsent) need.push('to tick the box agreeing to be contacted')
+      break
+    case 'home':
+      if (!c.address.trim()) need.push('a street address')
+      if (!c.city.trim()) need.push('a city')
+      if (!c.state.trim()) need.push('a state')
+      if (!/^\d{5}$/.test(c.zip.trim())) need.push('a 5-digit ZIP code')
+      if (calc.service === 'str' && !calc.strSize) need.push('the property size (bedrooms and bathrooms)')
+      if (calc.service === 'residential') {
+        if (!(calc.sqft > 0)) need.push('the square feet')
+        if (!intake.homeType) need.push('the home type')
+        if (!intake.occupied) need.push('whether the home is occupied or empty')
+      }
+      if (calc.service === 'post_construction' && !(calc.pcSqft > 0)) need.push('the square feet')
+      break
+    case 'dates':
+      if (!intake.dateWindows[0]?.date) need.push('a date for choice 1 (tap “Choose a date”)')
+      if (!intake.dateWindows[0]?.window) need.push('a time for choice 1')
+      break
+    case 'access':
+      if (!c.lastName.trim()) need.push('your last name')
+      if (!intake.access?.method) need.push('how we get in')
+      break
+    case 'card':
+      if (!c.stripePaymentMethodId) need.push('to save a card')
+      if (!intake.policyAccepted) need.push('to tick the box agreeing to the policy')
+      break
+  }
+  return need.length ? `To continue, we need ${need.join(', ')}.` : ''
+}
+
+function hasFirstTimeDiscount(q: { lines: { label: string }[] }): boolean {
+  return q.lines.some((l) => l.label === FIRST_TIME_DISCOUNT.label)
 }
 
 function stepSummary(step: StepId, calc: CalcState, c: Contact, intake: BookingIntake, photoCount: number): string {
@@ -430,7 +474,10 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
 
       case 'addons':
         return calc.service === 'post_construction' ? null : (
-          <AddOnTiles service={calc.service} selected={calc.addOns} onChange={(addOns) => updateCalc({ addOns })} bundledIncluded={bundledIncluded(calc)} />
+          <div className="flex flex-col gap-4">
+            <p className="font-marcellus text-sm opacity-70">Optional. Tap anything you’d like added, or just press Continue if you don’t need any.</p>
+            <AddOnTiles service={calc.service} selected={calc.addOns} onChange={(addOns) => updateCalc({ addOns })} bundledIncluded={bundledIncluded(calc)} />
+          </div>
         )
 
       case 'checklist':
@@ -476,14 +523,35 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
               <div key={i} className="flex flex-col gap-3">
                 <div className="flex items-center gap-4">
                   <span className="font-marcellus text-sm opacity-60 w-20">Choice {i + 1}</span>
-                  <input
-                    type="date"
-                    min={today}
-                    value={w.date}
-                    aria-label={`Date, choice ${i + 1}`}
-                    onChange={(e) => updateIntake({ dateWindows: intake.dateWindows.map((d, j) => (j === i ? { ...d, date: e.target.value } : d)) })}
-                    className="font-marcellus text-base bg-transparent border-b border-dark-brown/25 pb-2 w-44 focus:outline-none focus:border-dark-brown"
-                  />
+                  <label
+                    className={[
+                      'relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full border font-marcellus text-sm cursor-pointer min-w-[11rem]',
+                      w.date ? 'border-dark-brown bg-dark-brown text-stone' : 'border-dark-brown/40',
+                    ].join(' ')}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+                      <rect x="1" y="3" width="13" height="11" rx="1.5" />
+                      <path d="M1 7h13M5 1v4M10 1v4" />
+                    </svg>
+                    {w.date
+                      ? new Date(w.date + 'T12:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                      : 'Choose a date'}
+                    <input
+                      type="date"
+                      min={today}
+                      value={w.date}
+                      aria-label={`Date, choice ${i + 1}`}
+                      onClick={(e) => {
+                        try {
+                          e.currentTarget.showPicker?.()
+                        } catch {
+                          // Older browsers: the native input still opens on tap.
+                        }
+                      }}
+                      onChange={(e) => updateIntake({ dateWindows: intake.dateWindows.map((d, j) => (j === i ? { ...d, date: e.target.value } : d)) })}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </label>
                   {i > 0 && (
                     <button type="button" onClick={() => updateIntake({ dateWindows: intake.dateWindows.filter((_, j) => j !== i) })} className="font-marcellus text-xs opacity-50 hover:opacity-100 cursor-pointer bg-transparent border-none">
                       Remove
@@ -678,14 +746,19 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
                   <div className="pb-10 pl-10 max-sm:pl-0">
                     {renderStep(step)}
                     {!hideContinue && (
-                      <button
-                        type="button"
-                        onClick={() => completeStep(step)}
-                        disabled={!isStepValid(step, calc, contact, intake)}
-                        className="mt-8 px-12 py-4 rounded-full bg-dark-brown text-stone font-marcellus text-base transition-opacity duration-200 disabled:opacity-25 hover:opacity-75 cursor-pointer disabled:cursor-default"
-                      >
-                        Continue
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => completeStep(step)}
+                          disabled={!isStepValid(step, calc, contact, intake)}
+                          className="mt-8 px-12 py-4 rounded-full bg-dark-brown text-stone font-marcellus text-base transition-opacity duration-200 disabled:opacity-25 hover:opacity-75 cursor-pointer disabled:cursor-default"
+                        >
+                          Continue
+                        </button>
+                        {!isStepValid(step, calc, contact, intake) && (
+                          <p className="mt-3 font-marcellus text-sm opacity-70">{missingFor(step, calc, contact, intake)}</p>
+                        )}
+                      </>
                     )}
                     {error && <p className="mt-4 font-marcellus text-sm text-red-600 opacity-80">{error}</p>}
                   </div>
@@ -705,10 +778,17 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
         <QuoteSummary quote={quote} title="Your request" />
       </div>
       {/* Phones: running total always visible. */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-stone/95 backdrop-blur border-t border-dark-brown/15 px-4 py-3 font-marcellus text-sm flex justify-between items-baseline">
-        <span>{quote.quoteRequired ? 'Estimate' : 'Total'}</span>
-        <span className="text-lg">
-          {quote.lines.length ? `${formatMoney(quote.total)}${quote.period === 'month' ? '/mo' : ''}` : 'Custom quote'}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-stone/95 backdrop-blur border-t border-dark-brown/15 px-4 py-3 font-marcellus text-sm flex justify-between items-baseline gap-3">
+        <span>
+          {quote.quoteRequired ? 'Estimate' : 'Total'}
+          {hasFirstTimeDiscount(quote) && <span className="block text-xs opacity-60">incl. 20% first-visit discount</span>}
+        </span>
+        <span className="text-lg text-right">
+          {quote.lines.length
+            ? `${formatMoney(quote.total)}${quote.period === 'month' ? '/mo' : ''}`
+            : quote.incomplete
+              ? <span className="text-sm opacity-60">Choose your size to see a price</span>
+              : 'Custom quote'}
         </span>
       </div>
     </div>

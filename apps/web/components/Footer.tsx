@@ -2,10 +2,10 @@ import Link from 'next/link'
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[#ECE4DA] px-8 py-10" style={{ color: '#44362a' }}>
-      <div className="max-w-6xl mx-auto flex items-start justify-between">
-        <p className="text-4xl font-marcellus">STR Cleaning Crew</p>
-        <div className="flex gap-16">
+    <footer className="w-full bg-[#ECE4DA] px-8 py-10 max-sm:px-5" style={{ color: '#44362a' }}>
+      <div className="max-w-6xl mx-auto flex items-start justify-between gap-8 max-sm:flex-col max-sm:gap-6">
+        <p className="text-4xl max-sm:text-3xl font-marcellus">STR Cleaning Crew</p>
+        <div className="flex flex-wrap gap-x-16 gap-y-4">
           <div>
             <p className="text-base font-marcellus mb-2">Location</p>
             <p className="text-sm">Irvine, CA</p>

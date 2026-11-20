@@ -14,7 +14,9 @@ export default async function BookPage({
 }) {
   const { service, mode, q } = await searchParams
   // `mode` is the older link format (/book?mode=residential), still used by some pages.
-  const initial = decodeCalcState({ service: service ?? mode, q })
+  const decoded = decodeCalcState({ service: service ?? mode, q })
+  // Without a calculator hand-off, don't preselect an STR size: no price until the visitor picks one.
+  const initial = q ? decoded : { ...decoded, strSize: '' }
   return (
     <div className="min-h-screen flex flex-col bg-stone text-dark-brown">
       <div className="[&_a]:text-dark-brown [&_a]:opacity-70 [&_a:hover]:opacity-100 [&_button]:text-dark-brown">
