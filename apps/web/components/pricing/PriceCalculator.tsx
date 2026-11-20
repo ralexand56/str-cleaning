@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { calculateQuote, formatMoney } from '@/lib/pricing/engine'
+import { FIRST_TIME_DISCOUNT } from '@/lib/pricing/prices'
 import {
   DEFAULT_CALC_STATE,
   bundledIncluded,
@@ -76,7 +77,10 @@ export function PriceCalculator({ initial }: { initial?: Partial<CalcState> }) {
               {quote.period === 'month' ? '/mo' : ''}
             </>
           ) : (
-            'Custom quote'
+            quote.incomplete ? 'Choose your size' : 'Custom quote'
+          )}
+          {quote.lines.some((l) => l.label === FIRST_TIME_DISCOUNT.label) && (
+            <span className="block text-xs opacity-60">incl. 20% first-visit discount</span>
           )}
         </span>
         <Link href={bookHref} className="px-5 py-2.5 rounded-full bg-dark-brown text-stone font-marcellus text-sm no-underline">

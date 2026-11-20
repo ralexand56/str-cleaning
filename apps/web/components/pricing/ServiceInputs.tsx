@@ -197,6 +197,7 @@ export function HomeInputs({ state, update, options }: InputsProps) {
       <div>
         <label htmlFor="strSize" className={fieldLabel}>Property size</label>
         <select id="strSize" value={state.strSize} onChange={(e) => update({ strSize: e.target.value })} className={selectCls}>
+          {!state.strSize && <option value="" disabled>Choose bedrooms and bathrooms</option>}
           {STR_SIZES.map((s) => (
             <option key={s.key} value={s.key}>{s.label} · {s.sqft}</option>
           ))}

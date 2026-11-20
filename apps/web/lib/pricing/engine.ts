@@ -146,12 +146,17 @@ function unavailable(reason: string, period: Quote['period'] = 'visit'): Quote {
   return { lines: [], total: 0, period, subs: [], notes: [], quoteRequired: true, quoteReason: reason, usesProposed: false }
 }
 
+/** Not enough information yet to show a price. */
+function incomplete(reason: string): Quote {
+  return { ...unavailable(reason), quoteRequired: false, incomplete: true }
+}
+
 // ─── Quotes ──────────────────────────────────────────────────────────────────
 
 function quoteStr(input: StrQuoteInput, opts?: QuoteOptions): Quote {
   const size = getStrSize(input.sizeKey)
   const pkg = STR_PACKAGES.find((p) => p.key === input.packageKey)
-  if (!size || !pkg) return unavailable('Choose a property size and package.')
+  if (!size || !pkg) return incomplete('Choose your property size to see a price.')
   const proposed = isStrPriceProposed(size, pkg)
   if (proposed && !showProposed(opts)) return unavailable('We’ll quote this package for you.')
 
@@ -200,7 +205,7 @@ function quoteStr(input: StrQuoteInput, opts?: QuoteOptions): Quote {
 function quoteResidential(input: ResidentialQuoteInput, opts?: QuoteOptions): Quote {
   const pkg = RESIDENTIAL_PACKAGES.find((p) => p.key === input.packageKey)
   if (!pkg) return unavailable('Choose a package.')
-  if (!input.sqft || input.sqft <= 0) return unavailable('Enter the home’s square feet.')
+  if (!input.sqft || input.sqft <= 0) return incomplete('Enter the home’s square feet to see a price.')
   if (input.sqft > RESIDENTIAL.maxInstantSqft) {
     return unavailable(`Homes over ${RESIDENTIAL.maxInstantSqft.toLocaleString()} sq ft get a custom quote. Send a request and we’ll price it for you.`)
   }
@@ -250,7 +255,7 @@ function quoteResidential(input: ResidentialQuoteInput, opts?: QuoteOptions): Qu
 function quotePostConstruction(input: PostConstructionQuoteInput, opts?: QuoteOptions): Quote {
   const pass = POST_CONSTRUCTION_PASSES.find((p) => p.key === input.pass)
   if (!pass) return unavailable('Choose a clean.')
-  if (!input.sqft || input.sqft <= 0) return unavailable('Enter the site’s square feet.')
+  if (!input.sqft || input.sqft <= 0) return incomplete('Enter the site’s square feet to see a price.')
 
   const lines: QuoteLine[] = []
   const base = input.sqft * pass.rate
