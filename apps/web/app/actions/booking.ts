@@ -5,6 +5,7 @@ import { publicDataClient } from '@/lib/data/publicClient'
 import { stripe } from '@/lib/stripe/server'
 import { jobTypeFor } from '@/lib/pricing/jobType'
 import { intakeLines, type BookingIntake } from '@/lib/booking/intake'
+import { cleanSource } from '@/lib/tracking/source'
 import { inServiceArea } from '@/lib/booking/serviceArea'
 import { CARD_POLICY } from '@/lib/pricing/prices'
 
@@ -61,6 +62,7 @@ const SERVICE_LABELS: Record<BookingFormData['service'], string> = {
 }
 
 export async function submitBooking(form: BookingFormData) {
+  form = { ...form, intake: { ...form.intake, source: cleanSource(form.intake.source) || 'direct' } }
   const now = new Date().toISOString()
   const fullAddress = `${form.address}${form.unit ? ` #${form.unit}` : ''}, ${form.city}, ${form.state} ${form.zip}`
   const addOnsSummary = form.addOns.map((a) => `${a.label} x${a.qty}`).join(', ') || 'None'

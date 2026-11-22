@@ -1,6 +1,7 @@
 'use server'
 
 import { publicDataClient } from '@/lib/data/publicClient'
+import { cleanSource } from '@/lib/tracking/source'
 
 /**
  * Step 0 of booking (plan §6): save first name, phone, email and ZIP before anything else, so the
@@ -14,6 +15,7 @@ export async function startBooking(input: {
   zip: string
   service: string
   contactConsent: boolean
+  source?: string
 }): Promise<string | null> {
   const clip = (s: string, n: number) => s.trim().slice(0, n)
   if (!input.firstName.trim() || !input.email.trim() || !input.phone.trim()) return null
@@ -26,6 +28,7 @@ export async function startBooking(input: {
       email: clip(input.email, 200),
       phone: clip(input.phone, 40),
       zip: clip(input.zip, 10),
+      intake: { source: cleanSource(input.source) || 'direct' },
       rawMessage: `Started an online booking (${clip(input.service, 40)}) but hasn't sent the request yet. Agreed to calls, texts and emails: ${input.contactConsent ? 'yes' : 'no'}.`,
     })
     return created.data?.id ?? null

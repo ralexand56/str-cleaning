@@ -60,6 +60,8 @@ export interface BookingIntake {
   policyAccepted?: boolean
   /** Ticked "first time booking with us" (20% off the first visit). The team checks it. */
   firstTimeClient?: boolean
+  /** Campaign tag from the landing link (?src=mail, ?src=instagram), or "direct". */
+  source?: string
   /** The "started a booking" lead created at step 0, so the admin list can fold it into this request. */
   leadJobId?: string
 }
@@ -75,7 +77,8 @@ export const EMPTY_INTAKE: BookingIntake = {
 /** Plain-text lines for the team email and the admin job page. */
 export function intakeLines(i: BookingIntake): [string, string][] {
   const rows: [string, string | undefined][] = [
-    ['Preferred dates', i.dateWindows.filter((d) => d.date).map((d) => `${d.date} ${d.window}`.trim()).join(' · ')],
+    ['Booking source', i.source],
+    ['Preferred dates', (i.dateWindows ?? []).filter((d) => d.date).map((d) => `${d.date} ${d.window}`.trim()).join(' · ')],
     ['Home type', i.homeType],
     ['Occupied', i.occupied === 'empty' ? 'Empty' : i.occupied === 'occupied' ? 'Occupied' : undefined],
     ['Pets', i.pets ? (i.pets.has ? `Yes${i.pets.kind ? `: ${i.pets.kind}` : ''}` : 'No') : undefined],
@@ -86,15 +89,15 @@ export function intakeLines(i: BookingIntake): [string, string][] {
     ['Job stage', i.postConstruction?.stage],
     ['Builders on site', i.postConstruction?.buildersOnSite === undefined ? undefined : i.postConstruction.buildersOnSite ? 'Yes' : 'No'],
     ['Debris removed', i.postConstruction?.debrisRemoved === undefined ? undefined : i.postConstruction.debrisRemoved ? 'Yes' : 'No'],
-    ['Pay attention to', i.checklist.map((k) => CHECKLIST.find((c) => c.key === k)?.label ?? k).join('; ')],
+    ['Pay attention to', (i.checklist ?? []).map((k) => CHECKLIST.find((c) => c.key === k)?.label ?? k).join('; ')],
     ['Access', i.access?.method],
     ['Parking', i.access?.parking],
     ['Access notes', i.access?.notes],
-    ['Products', i.products === 'theirs' ? 'Use the client’s own products' : 'Our professional products'],
+    ['Products', i.products === 'theirs' ? 'Use the client’s own products' : i.products === 'ours' ? 'Our professional products' : undefined],
     ['Products to avoid', i.productsToAvoid],
     ['Heard about us', i.heardAbout],
     ['First-time client', i.firstTimeClient ? 'Yes (20% off applies to a first residential clean). Check they are new.' : undefined],
-    ['Contact consent', i.contactConsent ? 'Yes' : 'No'],
+    ['Contact consent', i.contactConsent === undefined ? undefined : i.contactConsent ? 'Yes' : 'No'],
     ['Cancellation policy', i.policyAccepted ? 'Accepted' : undefined],
   ]
   return rows.filter((r): r is [string, string] => !!r[1])

@@ -39,15 +39,15 @@ export function JobsTab() {
 
   // A visitor who finishes booking leaves two jobs: the step-0 lead and the full request, which
   // records the lead's id. Hide leads that turned into a request.
-  const finishedLeadIds = new Set(
-    jobs
-      .map((j) => {
-        const raw = typeof j.intake === 'string' ? (() => { try { return JSON.parse(j.intake) } catch { return null } })() : j.intake
-        return (raw as { leadJobId?: string } | null)?.leadJobId
-      })
-      .filter(Boolean),
-  )
+  const finishedLeadIds = new Set(jobs.map((j) => intakeOf(j)?.leadJobId).filter(Boolean))
   const visibleJobs = jobs.filter((j) => !finishedLeadIds.has(j.id))
+
+  // Where bookings came from (?src= on the landing link). Older jobs have no source saved.
+  const sourceCounts = new Map<string, number>()
+  for (const j of visibleJobs) {
+    const src = intakeOf(j)?.source
+    if (src) sourceCounts.set(src, (sourceCounts.get(src) ?? 0) + 1)
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -82,6 +82,13 @@ export function JobsTab() {
         </div>
       </div>
 
+      {sourceCounts.size > 0 && (
+        <p className="font-marcellus text-xs opacity-60">
+          Booking sources:{' '}
+          {[...sourceCounts.entries()].sort((a, b) => b[1] - a[1]).map(([src, n]) => `${src} ${n}`).join(' · ')}
+        </p>
+      )}
+
       {showWorkers && <WorkersPanel />}
       {showQuoteBuilder && <QuoteBuilder onCreated={() => { setShowQuoteBuilder(false); refresh() }} />}
 
@@ -99,7 +106,10 @@ export function JobsTab() {
                 <span>{job.firstName} {job.lastName}</span>
                 <span className="opacity-40 text-xs">{humanize(job.status)}</span>
               </div>
-              <p className="opacity-40 text-xs mt-1">{humanize(job.type)} · {job.propertySize ?? '—'}</p>
+              <p className="opacity-40 text-xs mt-1">
+                {humanize(job.type)} · {job.propertySize ?? '—'}
+                {intakeOf(job)?.source && <> · from {intakeOf(job)?.source}</>}
+              </p>
             </button>
           ))}
         </div>
@@ -114,4 +124,17 @@ export function JobsTab() {
       </div>
     </div>
   )
+}
+
+function intakeOf(job: { intake?: unknown }): { leadJobId?: string; source?: string } | null {
+  const raw = job.intake
+  if (!raw) return null
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
+  }
+  return raw as { leadJobId?: string; source?: string }
 }
