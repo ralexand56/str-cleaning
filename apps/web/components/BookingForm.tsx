@@ -1,5 +1,6 @@
 'use client'
 
+import { getSource } from '@/lib/tracking/source'
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { submitBooking } from '@/app/actions/booking'
@@ -250,6 +251,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
         zip: contact.zip,
         service: SERVICE_TYPE_LABELS[calc.service],
         contactConsent: intake.contactConsent,
+        source: getSource(),
       })
         .then((id) => id && updateIntake({ leadJobId: id }))
         .catch(() => {})
@@ -315,6 +317,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
           dateWindows: intake.dateWindows.filter((d) => d.date),
           pets: calc.service === 'post_construction' ? undefined : intake.pets,
           firstTimeClient: calc.firstTime,
+          source: getSource(),
         },
         photoKeys,
         addOns: addOnLines,
