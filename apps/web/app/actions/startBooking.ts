@@ -28,9 +28,10 @@ export async function startBooking(input: {
       email: clip(input.email, 200),
       phone: clip(input.phone, 40),
       zip: clip(input.zip, 10),
-      intake: { source: cleanSource(input.source) || 'direct' },
+      intake: JSON.stringify({ source: cleanSource(input.source) || 'direct' }),
       rawMessage: `Started an online booking (${clip(input.service, 40)}) but hasn't sent the request yet. Agreed to calls, texts and emails: ${input.contactConsent ? 'yes' : 'no'}.`,
     })
+    if (created.errors?.length) console.error('startBooking: lead not saved', JSON.stringify(created.errors))
     return created.data?.id ?? null
   } catch (err) {
     // A lead is a nice-to-have: never block the visitor's booking on it.
