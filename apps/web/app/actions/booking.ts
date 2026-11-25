@@ -91,17 +91,19 @@ export async function submitBooking(form: BookingFormData) {
     state: form.state,
     zip: form.zip,
     frequency: form.frequency,
-    addOns: form.addOns,
+    addOns: JSON.stringify(form.addOns),
     emergencySameDay: form.emergencySameDay,
     scheduledDate: form.date || undefined,
     scheduledTimeWindow: form.timeWindow,
     estimatedLow: estimate,
     estimatedHigh: estimate,
     notes: form.notes,
-    intake: form.intake,
+    intake: JSON.stringify(form.intake),
     photoKeys,
     customerId: form.customerId,
   })
+  // The data client returns errors instead of throwing, so a rejected save would otherwise pass silently.
+  if (created.errors?.length) console.error('submitBooking: Job not saved', JSON.stringify(created.errors))
 
   if (form.stripePaymentMethodId && form.customerId) {
     const method = await stripe.paymentMethods.retrieve(form.stripePaymentMethodId)
@@ -151,7 +153,7 @@ export async function submitBooking(form: BookingFormData) {
             `Notes:     ${form.notes || 'None'}`,
             ``,
             `Submitted: ${now}`,
-            `Job ID:    ${created.data?.id ?? 'unknown'}`,
+            created.data?.id ? `Job ID:    ${created.data.id}` : `Job ID:    NOT SAVED (the booking is not in the admin, enter it by hand)`,
           ].join('\n'),
         },
       },

@@ -43,7 +43,7 @@ export async function createManualJob(input: {
     city: input.city,
     state: input.state,
     zip: input.zip,
-    addOns: input.addOns,
+    addOns: JSON.stringify(input.addOns),
     notes: input.notes,
     quotedTotal: input.quotedTotal,
   })
