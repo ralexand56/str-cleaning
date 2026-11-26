@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="flex flex-wrap gap-x-16 gap-y-4">
           <div>
             <p className="text-base font-marcellus mb-2">Location</p>
-            <p className="text-sm">Irvine, CA</p>
+            <p className="text-sm">Laguna Hills, CA</p>
           </div>
           <div>
             <Link href="/contact" className="text-base font-marcellus mb-2 block text-dark-brown hover:opacity-70 transition-opacity no-underline">

@@ -66,7 +66,7 @@ export default function TermsPage() {
 
       <h2>Contact us</h2>
       <p>
-        STR Cleaning Crew, Irvine, California
+        STR Cleaning Crew, Laguna Hills, California
         <br />
         Phone: <a href={SITE.phoneHref}>{SITE.phone}</a>
         <br />
