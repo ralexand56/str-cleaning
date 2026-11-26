@@ -2,6 +2,7 @@
 
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { publicDataClient } from '@/lib/data/publicClient'
+import type { SmsConsentRecord } from '@/lib/booking/smsConsent'
 
 const region = process.env.AWS_REGION ?? 'us-east-1'
 const ses    = new SESClient({ region })
@@ -16,10 +17,16 @@ export type ContactInquiryData = {
   services:  string[]
   startDate: string
   details:   string
+  smsConsent: SmsConsentRecord
 }
 
 export async function submitContactInquiry(form: ContactInquiryData) {
-  await publicDataClient.models.Job.create({
+  const sms = {
+    marketing: form.smsConsent?.marketing === true,
+    transactional: form.smsConsent?.transactional === true,
+    at: form.smsConsent?.at ?? new Date().toISOString(),
+  }
+  const created = await publicDataClient.models.Job.create({
     type: 'CONTACT_INQUIRY',
     source: 'CONTACT_FORM',
     status: 'NEW',
@@ -30,7 +37,9 @@ export async function submitContactInquiry(form: ContactInquiryData) {
     scheduledDate: form.startDate || undefined,
     rawMessage: form.details,
     notes: `Interested in: ${form.services.join(', ') || 'Not specified'}`,
+    intake: JSON.stringify({ source: 'services-form', smsConsent: sms }),
   })
+  if (created.errors?.length) console.error('submitContactInquiry: Job not saved', JSON.stringify(created.errors))
 
   await ses.send(new SendEmailCommand({
     Source:      NOTIFY_EMAIL,
@@ -45,6 +54,7 @@ export async function submitContactInquiry(form: ContactInquiryData) {
             `Phone:          ${form.phone}`,
             `Interested in:  ${form.services.join(', ') || 'Not specified'}`,
             `Preferred start: ${form.startDate || 'Not specified'}`,
+            `SMS: booking updates ${sms.transactional ? 'yes' : 'no'}, marketing ${sms.marketing ? 'yes' : 'no'}`,
             ``,
             `Details:`,
             form.details,

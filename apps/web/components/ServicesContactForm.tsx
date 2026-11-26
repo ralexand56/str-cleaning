@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { submitContactInquiry } from '@/app/actions/contactInquiry'
+import { SmsConsentBoxes } from './booking/SmsConsentBoxes'
+import type { SmsConsentRecord } from '@/lib/booking/smsConsent'
 
 function inputClass() {
   return 'w-full border border-dark-brown/30 bg-transparent rounded px-3 py-3 font-marcellus text-sm text-dark-brown outline-none focus:border-dark-brown/70 transition-colors'
@@ -11,6 +13,7 @@ export function ServicesContactForm() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [smsConsent, setSmsConsent] = useState<SmsConsentRecord>({ marketing: false, transactional: false })
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -26,6 +29,7 @@ export function ServicesContactForm() {
         services:  fd.getAll('service').map(String),
         startDate: String(fd.get('startDate') ?? ''),
         details:   String(fd.get('details') ?? ''),
+        smsConsent: { ...smsConsent, at: new Date().toISOString() },
       })
       setSubmitted(true)
     } catch {
@@ -120,6 +124,8 @@ export function ServicesContactForm() {
           className={inputClass() + ' resize-none'}
         />
       </div>
+
+      <SmsConsentBoxes value={smsConsent} onChange={setSmsConsent} />
 
       {error && <p className="font-marcellus text-sm text-red-600 opacity-80">{error}</p>}
 
