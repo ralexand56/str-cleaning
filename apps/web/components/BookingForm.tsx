@@ -1,5 +1,6 @@
 'use client'
 
+import { SmsConsentBoxes } from './booking/SmsConsentBoxes'
 import { getSource } from '@/lib/tracking/source'
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -92,7 +93,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 function isStepValid(step: StepId, calc: CalcState, c: Contact, intake: BookingIntake): boolean {
   switch (step) {
     case 'contact':
-      return !!c.firstName.trim() && EMAIL_RE.test(c.email.trim()) && c.phone.replace(/\D/g, '').length >= 10 && /^\d{5}$/.test(c.zip.trim()) && intake.contactConsent
+      return !!c.firstName.trim() && EMAIL_RE.test(c.email.trim()) && c.phone.replace(/\D/g, '').length >= 10 && /^\d{5}$/.test(c.zip.trim())
     case 'home': {
       const address = !!c.address.trim() && !!c.city.trim() && !!c.state.trim() && /^\d{5}$/.test(c.zip.trim())
       if (calc.service === 'residential') return address && calc.sqft > 0 && !!intake.homeType && !!intake.occupied
@@ -119,7 +120,6 @@ function missingFor(step: StepId, calc: CalcState, c: Contact, intake: BookingIn
       if (c.phone.replace(/\D/g, '').length < 10) need.push('a phone number')
       if (!EMAIL_RE.test(c.email.trim())) need.push('an email address')
       if (!/^\d{5}$/.test(c.zip.trim())) need.push('a 5-digit ZIP code')
-      if (!intake.contactConsent) need.push('to tick the box agreeing to be contacted')
       break
     case 'home':
       if (!c.address.trim()) need.push('a street address')
@@ -250,7 +250,7 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
         email: contact.email,
         zip: contact.zip,
         service: SERVICE_TYPE_LABELS[calc.service],
-        contactConsent: intake.contactConsent,
+        smsConsent: { ...(intake.smsConsent ?? { marketing: false, transactional: false }), at: new Date().toISOString() },
         source: getSource(),
       })
         .then((id) => id && updateIntake({ leadJobId: id }))
@@ -381,10 +381,10 @@ export function BookingForm({ initial }: { initial?: CalcState }) {
             <input type="tel" autoComplete="tel" value={contact.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="Phone" className={inputCls} />
             <input type="email" autoComplete="email" value={contact.email} onChange={(e) => update({ email: e.target.value })} placeholder="Email" className={inputCls} />
             <input type="text" inputMode="numeric" autoComplete="postal-code" maxLength={5} value={contact.zip} onChange={(e) => update({ zip: e.target.value.replace(/\D/g, '') })} placeholder="ZIP code" className={`${inputCls} w-36`} />
-            <label className="flex items-start gap-3 cursor-pointer font-marcellus text-sm">
-              <input type="checkbox" checked={intake.contactConsent} onChange={(e) => updateIntake({ contactConsent: e.target.checked })} className="w-4 h-4 mt-0.5" />
-              I agree to calls, texts and emails from STR Cleaning Crew about this booking.
-            </label>
+            <SmsConsentBoxes
+              value={intake.smsConsent ?? { marketing: false, transactional: false }}
+              onChange={(smsConsent) => updateIntake({ smsConsent: { ...smsConsent, at: new Date().toISOString() } })}
+            />
             <FirstTimeToggle state={calc} update={updateCalc} />
           </div>
         )

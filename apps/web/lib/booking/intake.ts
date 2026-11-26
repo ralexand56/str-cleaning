@@ -3,6 +3,8 @@
  * request must carry"). Stored on Job.intake as JSON; the admin job page renders it.
  */
 
+import type { SmsConsentRecord } from './smsConsent'
+
 export const HOME_TYPES = ['House', 'Condo', 'Apartment', 'Townhouse'] as const
 export const STR_PLATFORMS = ['Airbnb', 'Vrbo', 'Booking.com', 'Direct bookings', 'Other'] as const
 export const PC_STAGES = ['Rough (construction just finished)', 'Final (site already swept)', 'Not sure'] as const
@@ -32,8 +34,10 @@ export interface DateWindow {
 }
 
 export interface BookingIntake {
-  /** Agreed to calls, texts and emails about the booking. */
-  contactConsent: boolean
+  /** Old single consent box (bookings before the separate SMS boxes). Kept so old records still display. */
+  contactConsent?: boolean
+  /** Optional SMS consent, recorded separately for marketing and transactional texts. */
+  smsConsent?: SmsConsentRecord
   homeType?: string
   occupied?: 'occupied' | 'empty'
   pets?: { has: boolean; kind?: string }
@@ -67,7 +71,7 @@ export interface BookingIntake {
 }
 
 export const EMPTY_INTAKE: BookingIntake = {
-  contactConsent: false,
+  smsConsent: { marketing: false, transactional: false },
   checklist: [],
   dateWindows: [{ date: '', window: '' }],
   products: 'ours',
@@ -98,6 +102,8 @@ export function intakeLines(i: BookingIntake): [string, string][] {
     ['Heard about us', i.heardAbout],
     ['First-time client', i.firstTimeClient ? 'Yes (20% off applies to a first residential clean). Check they are new.' : undefined],
     ['Contact consent', i.contactConsent === undefined ? undefined : i.contactConsent ? 'Yes' : 'No'],
+    ['SMS: marketing', i.smsConsent ? (i.smsConsent.marketing ? 'Yes, opted in' : 'No') : undefined],
+    ['SMS: booking updates', i.smsConsent ? (i.smsConsent.transactional ? 'Yes, opted in' : 'No') : undefined],
     ['Cancellation policy', i.policyAccepted ? 'Accepted' : undefined],
   ]
   return rows.filter((r): r is [string, string] => !!r[1])
