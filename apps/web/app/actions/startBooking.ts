@@ -2,6 +2,7 @@
 
 import { publicDataClient } from '@/lib/data/publicClient'
 import { cleanSource } from '@/lib/tracking/source'
+import type { SmsConsentRecord } from '@/lib/booking/smsConsent'
 
 /**
  * Step 0 of booking (plan §6): save first name, phone, email and ZIP before anything else, so the
@@ -14,7 +15,7 @@ export async function startBooking(input: {
   email: string
   zip: string
   service: string
-  contactConsent: boolean
+  smsConsent: SmsConsentRecord
   source?: string
 }): Promise<string | null> {
   const clip = (s: string, n: number) => s.trim().slice(0, n)
@@ -28,8 +29,11 @@ export async function startBooking(input: {
       email: clip(input.email, 200),
       phone: clip(input.phone, 40),
       zip: clip(input.zip, 10),
-      intake: JSON.stringify({ source: cleanSource(input.source) || 'direct' }),
-      rawMessage: `Started an online booking (${clip(input.service, 40)}) but hasn't sent the request yet. Agreed to calls, texts and emails: ${input.contactConsent ? 'yes' : 'no'}.`,
+      intake: JSON.stringify({
+        source: cleanSource(input.source) || 'direct',
+        smsConsent: { marketing: !!input.smsConsent?.marketing, transactional: !!input.smsConsent?.transactional, at: new Date().toISOString() },
+      }),
+      rawMessage: `Started an online booking (${clip(input.service, 40)}) but hasn't sent the request yet. SMS consent: booking updates ${input.smsConsent?.transactional ? 'yes' : 'no'}, marketing ${input.smsConsent?.marketing ? 'yes' : 'no'}.`,
     })
     if (created.errors?.length) console.error('startBooking: lead not saved', JSON.stringify(created.errors))
     return created.data?.id ?? null

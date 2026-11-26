@@ -25,6 +25,15 @@ export default function Footer() {
               Instagram {SITE.instagram}
             </a>
           </div>
+          <div>
+            <p className="text-base font-marcellus mb-2">Policies</p>
+            <Link href="/privacy" className="text-sm block hover:underline text-dark-brown">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-sm block hover:underline mt-1 text-dark-brown">
+              Terms &amp; Conditions
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
